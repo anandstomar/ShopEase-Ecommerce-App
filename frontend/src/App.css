@@ -1,0 +1,48 @@
+/* 1) Import Tailwind global styles */
+@import './output.css';
+
+/* 2) Smooth scrolling for in‑page anchors */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 3) App wrapper & flex layout helpers */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+}
+
+/* 4) Centered container utility (if you need a non‑Tailwind wrapper) */
+.container-custom {
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* 5) Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #9ca3af; /* gray-400 */
+  border-radius: 4px;
+  border: 2px solid transparent;
+}
+
+/* 6) Global <hr> styling */
+hr {
+  border: none;
+  border-top: 1px solid #e5e7eb; /* gray-200 */
+  margin: 2rem 0;
+}
