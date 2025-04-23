@@ -49,7 +49,6 @@ export default function RazorpayCheckout({ amount: propAmount }) {
           email: localStorage.getItem('userEmail') || '',
           contact: localStorage.getItem('userContact') || '',
         },
-        theme: { color: '#3399cc' },
         handler: async response => {
           try {
             const verifyRes = await axios.post(
