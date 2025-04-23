@@ -62,13 +62,15 @@ export default function RazorpayCheckout({ amount: propAmount }) {
             );
             alert(verifyRes.data.message);
             dispatch(clearCart());
-            const user_id = localStorage.getItem('userId')
-            if (!user_id) {
+            const userId = localStorage.getItem('userId')
+            if (!userId) {
               alert('User ID not found. Please log in again.');
               console.error('User ID not found in localStorage');
             } 
+            const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+            console.log('Found user:', data.id);
             await api.post('/orders/', {
-                    user_id,
+                    user_id: data.id,
                     items: cartItems.map(({ product, quantity }) => ({
                       product_id: product._id,
                       quantity

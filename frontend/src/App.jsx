@@ -10,18 +10,27 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import UserProfile    from './components/UserProfile'
 import AddProductPage from './pages/AddProducts'
+import useNotifications from './components/userNotification'
 import './App.css'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './firebase'
 
 export default function App() {
+  useNotifications()
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      localStorage.setItem("userUID", user.uid);
+    } else {
+      localStorage.removeItem("userUID");
+    }
+  });
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Dashboard with sidebar */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="products" replace />} />
           <Route path="products" element={<ProductsPage />} />

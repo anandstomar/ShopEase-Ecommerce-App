@@ -7,7 +7,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { runNotificationConsumer } = require('./services/notificationService');
-const { connectProducers  } = require('./config/kafka'); 
+const { connectProducers, runConsumer  } = require('./config/kafka'); 
 const paymentRoutes = require('./routes/paymentRoutes');
 const session = require('express-session');
 const passport = require('passport');
@@ -93,10 +93,14 @@ apolloServer.start().then(() => {
 
   const startApp = async () => {
     try {
-      await connectProducers() ;
-      console.log("Kafka producer connected");
-      console.log(`Notification Service running on port ${PORT}`);
-      await runNotificationConsumer();
+      //await connectProducers() ;
+      // console.log("Kafka producer connected");
+      // console.log(`Notification Service running on port ${PORT}`);
+      //await runNotificationConsumer();
+       await runConsumer().catch(err => {
+        console.error('Notification consumer error:', err);
+        process.exit(1);
+      });
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`GraphQL endpoint available at http://localhost:${PORT}/graphql`);

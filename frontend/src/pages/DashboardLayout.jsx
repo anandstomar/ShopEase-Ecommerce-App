@@ -26,13 +26,6 @@ export default function DashboardLayout() {
         <div className="mb-8 text-2xl font-bold text-primary">ShopEase</div>
         <nav className="flex-1 space-y-4">
           {menuItems.map(({ to, label }) => (
-            // <Link
-            //   key={to}
-            //   to={to}
-            //   className={`btn btn-ghost w-full justify-start text-gray-800 dark:text-gray-100 ${
-            //     pathname.endsWith(to) ? 'bg-primary/20 dark:bg-primary/30' : ''
-            //   }`}
-            // >
             <Link
             key={to}
               to={to}

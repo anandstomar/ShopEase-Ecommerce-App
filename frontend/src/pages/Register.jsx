@@ -7,7 +7,6 @@ import api from '../api';
 export default function Register() {
   const navigate = useNavigate();
 
-  // This will be called by AuthForm with an object { name, email, password }
   const registerWithEmail = async ({ name, email, password }) => {
     try {
 
@@ -34,21 +33,21 @@ export default function Register() {
     }
   };
 
-  // Popup‑based Google sign‑in
-  const loginWithGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+  // // Popup‑based Google sign‑in
+  // const loginWithGoogle = async () => {
+  //   try {
+  //     const result = await signInWithPopup(auth, provider);
+  //     const idToken = await result.user.getIdToken();
 
-      // Hit your new “google” endpoint
-      const { data } = await api.post('/users/google', { idToken });
-      localStorage.setItem('token', data.token);
-      navigate('/dashboard');
-    } catch (err) {
-      console.error('Google registration/login failed:', err);
-      alert(err.response?.data?.error || err.message);
-    }
-  };
+  //     // Hit your new “google” endpoint
+  //     const { data } = await api.post('/users/google', { idToken });
+  //     localStorage.setItem('token', data.token);
+  //     navigate('/dashboard');
+  //   } catch (err) {
+  //     console.error('Google registration/login failed:', err);
+  //     alert(err.response?.data?.error || err.message);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -56,8 +55,13 @@ export default function Register() {
         <AuthForm
           type="register"
           onSubmit={registerWithEmail}
-          onGoogleSignIn={loginWithGoogle}
-        />
+        /><hr className="border-gray-600" />
+        <a
+          href="http://localhost:3000/auth/google"
+          className="btn w-full bg-white text-black hover:bg-gray-200"
+        >
+          Continue with Google
+        </a>
       </div>
     </div>
   );

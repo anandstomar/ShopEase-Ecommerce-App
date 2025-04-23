@@ -43,22 +43,7 @@ router.post('/verify-payment', (req, res) => {
   }
 });
 
-// const crypto = require('crypto');
 
-// router.post('/verify-payment', (req, res) => {
-//   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-//   const generated_signature = crypto
-//     .createHmac('sha256', "YcfnQWFFNuM7W2E4NpoWyxQB")
-//     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-//     .digest('hex');
-
-//   if (generated_signature === razorpay_signature) {
-//     res.status(200).json({ message: 'Payment verified successfully' });
-//   } else {
-//     res.status(400).json({ message: 'Invalid signature' });
-//   }
-// });
 
 
 module.exports = router;

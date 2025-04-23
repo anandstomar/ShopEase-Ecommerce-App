@@ -1,85 +1,89 @@
-// controllers/userController.js
-const userService = require('../services/userService');
-const admin = require('../config/firebase');
-const pool = require('../config/postgresql'); 
-const { getUserById } = require('../models/userModel');
+const authService = require('../services/userService');
+const {getUserById, getUserByIdentifier} = require('../models/userModel');
 
 async function registerUser(req, res) {
   try {
-    const { name, email, password} = req.body;
-    console.log('Registering user:', { name, email, password });
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Missing name/email/password' });
-    }
-    const user = await userService.registerEmail({ name, email, password });
-    res.status(201).json({ user });
+    const { name, email, password } = req.body;
+    return res.status(201).json(
+      await authService.registerEmail({ name, email, password })
+    );
   } catch (err) {
-    res.status(400).json({ error: err.message });
-    console.error('🔥 registerUser error:', err);
-    const status = err.message.includes('already in use') ? 409 : 500;
-     return res.status(status).json({ error: err.message });
+    const status = err.message.includes('in use') ? 409 : 400;
+    return res.status(status).json({ error: err.message });
   }
 }
 
 async function loginUser(req, res) {
   try {
     const { email, password } = req.body;
-    console.log('Logging in user:', { email, password });
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Missing email/password' });
-    }
-    const user = await userService.loginEmail({ email, password });
-    res.json({ user });
+    console.log('Login attempt:', { email, password }); 
+    return res.json(
+      await authService.loginEmail({ email, password })
+    );
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    return res.status(401).json({ error: err.message });
   }
 }
 
-async function googleCallback(req, res) {
+async function firebaseCallback(req, res) {
   try {
     const { idToken } = req.body;
-    if (!idToken) {
-      return res.status(400).json({ error: 'Missing idToken' });
-    }
-    const user = await userService.loginWithGoogle(idToken);
-    res.json({ user });
+    if (!idToken) throw new Error('Missing idToken');
+    return res.json(await authService.loginWithFirebase(idToken));
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    return res.status(401).json({ error: err.message });
   }
 }
 
-async function getAllUsers(req, res) {
+async function googleOAuthCallback(req, res) {
   try {
-    const { rows } = await pool.query(`
-      SELECT 
-        id    AS userId,
-        name, 
-        email
-      FROM users
-    `);
-    return res.json(rows);
+    const { googleId, name, email } = req.body;
+    if (!googleId || !email) throw new Error('Missing googleId/email');
+    return res.json(
+      await authService.loginWithGoogleOAuth({ googleId, name, email })
+    );
   } catch (err) {
-    console.error('Get all users error:', err);
-    return res.status(500).json({ error: 'Could not fetch users' });
+    return res.status(400).json({ error: err.message });
   }
 }
 
-async function getUsersById(req, res) {
+async function getUsersByIds(req, res) {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' });
+  const user = await getUserById(id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json(user);
+}
 
+async function identifyUser(req, res) {
   try {
-    const user = await getUserById(id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { identifier } = req.params;
+    if (!identifier) {
+      return res.status(400).json({ error: 'Missing identifier' });
+    }
+
+    const user = await getUserByIdentifier(identifier);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     return res.json({
       id: user.id,
-      email: user.email,
-      name: user.name,
+     // name: user.name,
+     // email: user.email,
     });
   } catch (err) {
-    console.error('getUserById error:', err);
+    console.error('identifyUser error:', err);
     return res.status(500).json({ error: 'Server error' });
   }
 }
 
-module.exports = { registerUser, loginUser, googleCallback, getAllUsers, getUsersById };
+module.exports = {
+  registerUser,
+  loginUser,
+  firebaseCallback,
+  googleOAuthCallback,
+  getUsersByIds,
+  identifyUser
+};
+

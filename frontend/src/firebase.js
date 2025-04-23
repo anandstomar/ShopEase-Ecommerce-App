@@ -10,10 +10,11 @@ import {
   browserSessionPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from 'firebase/auth';
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import api from './api';
+import { useNavigate } from 'react-router-dom';
 
 
 const firebaseConfig = {
@@ -27,6 +28,7 @@ const firebaseConfig = {
   measurementId: "G-KMLM1P6X35"
 };
 
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 onAuthStateChanged(auth, (user) => {
@@ -37,6 +39,7 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 const messaging = getMessaging(app);
+
 setPersistence(auth, browserSessionPersistence)
   .catch((error) => {
     console.error("Error setting auth persistence:", error);
@@ -51,20 +54,22 @@ const signInWithGoogleRedirect = async () => {
   }
 };
 
-const handleGoogleLogin = async () => {
+
+const loginWithGoogle = async (navigate) => {
   try {
     const result = await signInWithPopup(auth, provider);
-    const token = await result.user.getIdToken();
-
-    const res = await api.post('/users/login', {
-      idToken: token,
-    });
-
-    localStorage.setItem('token', token);
-    console.log('User info:', res.data);
+    console.log('Google login result:', result);
+    const { user } = result; 
+    const idToken = await user.getIdToken();
+    api.get()
+    const uid      = user.uid;
+    const { data } = await api.post('/users/firebase', { idToken });
+    localStorage.setItem('token', data.token);
+    localStorage.setItem("userId", uid);
+    navigate('/dashboard');
   } catch (err) {
     console.error('Google login failed:', err);
-    alert(err.message);
+    alert(err.response?.data?.error || err.message);
   }
 };
 
@@ -94,8 +99,12 @@ export {
   retrieveFCMToken,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  handleGoogleLogin,
-  signInWithPopup
+  // handleGoogleLogin,
+  signInWithPopup,
+  messaging,
+  getToken,
+  onMessage,
+  loginWithGoogle
 };
 
 

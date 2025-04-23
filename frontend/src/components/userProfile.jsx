@@ -9,22 +9,53 @@ export default function UserProfile() {
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
-    if (!userId) {
-      console.error('No userId in localStorage');
-      return;
-    }
-    api.get(`/users/profile/${userId}`)
-      .then(res => setProfile(res.data))
-      .catch(err => {
+    const fetchProfile = async () => {
+      if (!userId) {
+        console.log('No userId in localStorage');
+        return;
+      }
+  
+      try {
+        if (isNaN(userId)) {
+          const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          console.log('Found user:', data);
+          const res = await api.get(`/users/profile/${data.id}`);
+          setProfile(res.data);
+        } else {
+          const res = await api.get(`/users/profile/${userId}`);
+          setProfile(res.data);
+        }
+      } catch (err) {
         console.error('Profile fetch failed:', err);
-      });
+      }
+    };
+  
+    fetchProfile();
   }, [userId]);
 
   useEffect(() => {
-    if (!userId) return console.error('no userId stored');
-    api.get(`/orders/${userId}`)
-      .then(({ data }) => setOrders(data))
-      .catch(console.error);
+    const fetchOrders = async () => {
+      if (!userId) {
+        console.log('No userId in localStorage');
+        return;
+      }
+  
+      try {
+        if (isNaN(userId)) {
+          const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          console.log('Found user:', data);
+          const res = await api.get(`/orders/${data.id}`);
+          setOrders(res.data);
+        } else {
+          const res = await api.get(`/orders/${userId}`);
+          setOrders(res.data);
+        }
+      } catch (err) {
+        console.error('Orders fetch failed:', err);
+      }
+    };
+  
+    fetchOrders();
   }, [userId]);
 
   function formatOrderDate(timestamp) {
@@ -34,21 +65,6 @@ export default function UserProfile() {
     return format(dt, 'dd/MM/yyyy');
   }
 
-
-  // useEffect(() => {
-  //   api
-  //   .get('/orders/${userId}')
-  //   .then(res => {
-  //       const data = res.data
-  //       const list = Array.isArray(data)
-  //         ? data
-  //         : Array.isArray(data.orders)
-  //         ? data.orders
-  //         : []
-  //       setOrders(list)
-  //     })
-  //     .catch(err => console.error('Orders fetch failed:', err))
-  // }, [])
 
   if (!profile) {
     return <p className="text-gray-700 dark:text-gray-300">Loading profile...</p>

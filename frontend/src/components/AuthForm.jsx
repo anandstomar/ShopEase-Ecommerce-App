@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { handleGoogleLogin } from '../firebase';
+import {loginWithGoogle } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 export default function AuthForm({ onSubmit, type}) {
   const [formData, setFormData] = useState({ name: '',email: '', password: '' });
@@ -11,6 +12,8 @@ export default function AuthForm({ onSubmit, type}) {
     e.preventDefault();
     onSubmit(formData);
   };
+
+  const navigate = useNavigate();
 
   return (
     <form onSubmit={handleSubmit} className="auth-form space-y-4">
@@ -51,8 +54,8 @@ export default function AuthForm({ onSubmit, type}) {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         type="button"
-        onClick={handleGoogleLogin}
-        className="btn bg-red-500 text-white "
+        onClick={() => loginWithGoogle(navigate)}
+        className="btn bg-red-500 text-white"
       >
         Sign in with Google
       </motion.button>

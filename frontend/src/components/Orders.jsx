@@ -1,12 +1,40 @@
 import { useEffect, useState } from 'react'
 import { fetchUserOrders } from '../api'
+import api from '../api'
 
-export default function Orders({ userId }) {
+export default function Orders() {
   const [orders, setOrders] = useState([])
 
-  useEffect(() => {
-    fetchUserOrders(userId).then(res => setOrders(res.data))
-  }, [userId])
+  const userId = localStorage.getItem('userId')
+  // useEffect(() => {
+  //   fetchUserOrders(userId).then(res => setOrders(res.data))
+  // }, [userId])
+
+   useEffect(() => {
+      const fetchOrders = async () => {
+        if (!userId) {
+          console.log('No userId in localStorage');
+          return;
+        }
+    
+        try {
+          if (isNaN(userId)) {
+            const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+            console.log('Found user:', data);
+            const res = await fetchUserOrders(data.id);
+            setOrders(res.data);
+          } else {
+            const res = await fetchUserOrders(userId);
+            setOrders(res.data);
+          }
+        } catch (err) {
+          console.error('Orders fetch failed:', err);
+        }
+      };
+    
+      fetchOrders();
+    }, [userId]);
+  
 
   return (
     <div className="space-y-4">
