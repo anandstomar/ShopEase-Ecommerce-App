@@ -43,7 +43,6 @@ export default function UserProfile() {
       try {
         if (isNaN(userId)) {
           const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-          console.log('Found user:', data);
           const res = await api.get(`/orders/${data.id}`);
           setOrders(res.data);
         } else {

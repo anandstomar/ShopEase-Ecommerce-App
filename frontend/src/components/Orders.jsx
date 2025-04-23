@@ -20,7 +20,6 @@ export default function Orders() {
         try {
           if (isNaN(userId)) {
             const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-            console.log('Found user:', data);
             const res = await fetchUserOrders(data.id);
             setOrders(res.data);
           } else {

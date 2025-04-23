@@ -67,7 +67,6 @@ export default function RazorpayCheckout({ amount: propAmount }) {
               console.error('User ID not found in localStorage');
             } 
             const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-            console.log('Found user:', data.id);
             await api.post('/orders/', {
                     user_id: data.id,
                     items: cartItems.map(({ product, quantity }) => ({

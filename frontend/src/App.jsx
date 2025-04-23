@@ -47,40 +47,5 @@ export default function App() {
 }
 
  
-  // return (
-  //   <Router>
-  //     <Routes>
-  //       <Route path="/" element={<Home />} />
-  //       <Route path="/register" element={<Register />} />
-  //       <Route path="/login" element={<Login />} />
-  //       <Route path="/dashboard" element={<Dashboard />} />
-  //     </Routes>
-  //   </Router>
-  // );
-
-
-   
-
-
-      // getRedirectResult(auth).then((result) => {
-      //   console.log("Redirect result:", result);
-      //   if (result) {
-      //     const credential = GoogleAuthProvider.credentialFromResult(result);
-      //     if (credential) {
-      //       console.log("Google token:", credential.accessToken);
-      //     }
-      //   }
-            // const result = getRedirectResult(auth)
-            // if (result.user) {
-            //   const { displayName, email, uid } = result.user;
-            //   console.log("User info:", result.user);
-            //   if (!displayName || !email || !uid) {
-            //     throw new Error("Missing user information from Google");
-            //   }
-            //   registerUser({ name: result.user.displayName, email:result.user.email, firebaseUid: result.user.uid });
-            //   navigate('/login'); // Or directly to dashboard if auto-login
-            // }
-          
-  // })
  
  
