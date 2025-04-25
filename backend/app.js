@@ -1,5 +1,4 @@
 const express = require('express');
-require('dotenv').config();
 const bodyParser = require('body-parser');
 const apolloServer = require('./config/graphql');
 const productRoutes = require('./routes/productRoutes');

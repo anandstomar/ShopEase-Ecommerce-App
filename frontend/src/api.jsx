@@ -4,7 +4,7 @@ const BASE_URL = 'http://localhost:3000/api';
 
 
 const api = axios.create({
-  baseURL: 'http://3.108.220.224/api', 
+  baseURL: 'http://localhost:3000/api', 
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ token: 'BITaTIemTqctnE7VGQ3Birc8z2gS7CCEAWvgY7XDMTsCFx-6kWP5hw6u3oxanZ9aj6wZDAt64goV0l6SrNkI7xM' }),
 });

@@ -1,25 +1,22 @@
- // host: 'localhost',
-  // port: 6379,
 const redis = require('redis');
-const redisUrl = process.env.REDIS_URL;
-if (!redisUrl) throw new Error('REDIS_URL env var is required');
 
-const client = redis.createClient({ url: redisUrl });
+const client = redis.createClient({
+  host: 'localhost',
+  port: 6379,
+});
 
-client.on('error', err => {
+client.on('error', (err) => {
   console.error('Redis error:', err);
 });
 
 (async () => {
   try {
     await client.connect();
-    console.log('✅ Connected to Redis');
+    console.log('Connected to Redis');
   } catch (err) {
-    console.error('❌ Error connecting to Redis:', err);
-    process.exit(1);
+    console.error('Error connecting to Redis:', err);
   }
 })();
 
 module.exports = client;
-
 
