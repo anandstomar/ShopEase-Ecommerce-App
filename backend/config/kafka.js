@@ -3,19 +3,22 @@ const { notifyOrderCreated, notifyProductUpdated } = require('../services/notifi
 const broker = process.env.KAFKA_BROKER;
 if (!broker) throw new Error('KAFKA_BROKER env var is required');
 
-const kafka = new Kafka({
+const baseConfig = {
   clientId: 'ecommerce-app',
-  brokers: [broker]
-});
+  brokers: [broker],
+};
+
+const kafka = new Kafka(baseConfig);
 
 const kafkaEventBus = new Kafka({
+  ...baseConfig,
   clientId: 'event-bus',
-  brokers: [broker]
+
 });
 
 const kafkaNotification = new Kafka({
+  ...baseConfig,
   clientId: 'notification-service',
-  brokers: [broker]
 });
   // brokers: ['localhost:9092']
 
