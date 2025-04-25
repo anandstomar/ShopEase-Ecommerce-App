@@ -1,21 +1,23 @@
 const { Kafka, Partitioners } = require('kafkajs');
 const { notifyOrderCreated, notifyProductUpdated } = require('../services/notificationService');
+const broker = process.env.KAFKA_BROKER;
+if (!broker) throw new Error('KAFKA_BROKER env var is required');
 
 const kafka = new Kafka({
   clientId: 'ecommerce-app',
-  brokers: ['localhost:9092']
+  brokers: [broker]
 });
 
 const kafkaEventBus = new Kafka({
   clientId: 'event-bus',
-  brokers: ['localhost:9092']
+  brokers: [broker]
 });
 
 const kafkaNotification = new Kafka({
   clientId: 'notification-service',
-  brokers: ['localhost:9092']
+  brokers: [broker]
 });
-
+  // brokers: ['localhost:9092']
 
 const ecommerceProducer = kafka.producer({
   createPartitioner: Partitioners.LegacyPartitioner

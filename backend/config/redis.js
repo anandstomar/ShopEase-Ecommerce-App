@@ -1,9 +1,12 @@
 const redis = require('redis');
+const redisUrl = process.env.REDIS_URL;
+if (!redisUrl) {
+  throw new Error('REDIS_URL env var is required');
+}
 
-const client = redis.createClient({
-  host: 'localhost',
-  port: 6379,
-});
+const client = redis.createClient(redisUrl);
+  // host: 'localhost',
+  // port: 6379,
 
 client.on('error', (err) => {
   console.error('Redis error:', err);
