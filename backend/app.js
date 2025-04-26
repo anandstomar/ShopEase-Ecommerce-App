@@ -97,10 +97,10 @@ apolloServer.start().then(() => {
       // console.log("Kafka producer connected");
       // console.log(`Notification Service running on port ${PORT}`);
       //await runNotificationConsumer();
-       await runConsumer().catch(err => {
-        console.error('Notification consumer error:', err);
-        process.exit(1);
-      });
+      //  await runConsumer().catch(err => {
+      //   console.error('Notification consumer error:', err);
+      //   process.exit(1);
+      // });
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`GraphQL endpoint available at http://localhost:${PORT}/graphql`);
