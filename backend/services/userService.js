@@ -11,14 +11,12 @@ const {
 const JWT_SECRET     = 'some-very-strong-secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
 function signToken(user) {
   const payload = { sub: user.id, email: user.email };
   const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   return { token, user: { id: user.id, name: user.name, email: user.email } };
 }
 
-// ─── 1) Email/Password ──────────────────────────────────────────────────────
 async function registerEmail({ name, email, password }) {
   if (await getUserByEmail(email)) {
     throw new Error('Email already in use');
@@ -39,7 +37,6 @@ async function loginEmail({ email, password }) {
   return signToken(user);
 }
 
-// ─── 2) Firebase “Sign in with Google” ─────────────────────────────────────
 async function loginWithFirebase(idToken) {
   const decoded = await admin.auth().verifyIdToken(idToken);
   const { uid, name, email } = decoded;
@@ -50,9 +47,6 @@ async function loginWithFirebase(idToken) {
   return signToken(user);
 }
 
-// ─── 3) OAuth2 “Continue with Google” ──────────────────────────────────────
-//    Called when your frontend has already obtained a Google‐ID (via gapi or
-//    popup) and POSTs { googleId, name, email }.
 async function loginWithGoogleOAuth({ googleId, name, email }) {
   let user = await getUserByGoogleId(googleId);
   if (!user) {

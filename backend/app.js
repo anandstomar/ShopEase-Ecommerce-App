@@ -83,7 +83,7 @@ passport.authenticate('google', { failureRedirect: '/login', session: false }),
     'some-very-strong-secret',
     { expiresIn: '2h' }
   );
-  res.redirect('http://localhost:5173/dashboard');
+  res.redirect('https://shop-ease-ecommerce-app.vercel.app/dashboard');
 }
 );
 

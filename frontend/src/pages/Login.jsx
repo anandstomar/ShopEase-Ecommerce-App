@@ -105,7 +105,7 @@ export default function Login() {
           onSubmit={handleLogin }
         /><hr className="border-gray-600" />
         <a
-          href="http://localhost:3000/auth/google"
+          href="http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000/auth/google"
           className="btn w-full bg-white text-black hover:bg-gray-200"
         >
           Continue with Google

@@ -1,8 +1,6 @@
-// config/redis.js
 const redis = require('redis');
 
-// Docker Compose gives you a container named "redis" on the default network
-const REDIS_HOST = 'redis';
+const REDIS_HOST = 'localhost';// 'redis' if using Docker Compose
 const REDIS_PORT = 6379;
 
 const client = redis.createClient({

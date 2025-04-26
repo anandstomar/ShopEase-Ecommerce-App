@@ -61,7 +61,6 @@ const loginWithGoogle = async (navigate) => {
     console.log('Google login result:', result);
     const { user } = result; 
     const idToken = await user.getIdToken();
-    api.get()
     const uid      = user.uid;
     const { data } = await api.post('/users/firebase', { idToken });
     localStorage.setItem('token', data.token);

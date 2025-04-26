@@ -10,4 +10,13 @@ export default defineConfig({
       injectRegister: 'auto',
     }),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 });

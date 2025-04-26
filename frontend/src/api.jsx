@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000/api';
 
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', 
+  baseURL: 'http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000/api', 
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ token: 'BITaTIemTqctnE7VGQ3Birc8z2gS7CCEAWvgY7XDMTsCFx-6kWP5hw6u3oxanZ9aj6wZDAt64goV0l6SrNkI7xM' }),
 });
