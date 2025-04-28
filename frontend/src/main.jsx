@@ -8,6 +8,7 @@ import { store } from './cartmangement/store.js'
 import { ThemeProvider } from './context/ThemeContext'
 
 
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/firebase-messaging-sw.js')

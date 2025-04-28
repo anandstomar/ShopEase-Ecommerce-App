@@ -57,7 +57,7 @@ export default function Register() {
           onSubmit={registerWithEmail}
         /><hr className="border-gray-600" />
         <a
-          href="http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000/auth/google"
+          href="https://shopeaseecommerce.store/auth/google"
           className="btn w-full bg-white text-black hover:bg-gray-200"
         >
           Continue with Google
