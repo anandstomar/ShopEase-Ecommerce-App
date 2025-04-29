@@ -21,7 +21,7 @@ router.post('/firebase', firebaseCallback);
 // 3) Google OAuth2 “Continue with Google”
 router.post('/google',   googleOAuthCallback);
 
-router.get('/profile/:id', getUsersByIds);
+router.get('/profile/:id', getUsersByIds); 
 
 //example protected route
 router.get('/me', authMiddleware, (req, res) => {

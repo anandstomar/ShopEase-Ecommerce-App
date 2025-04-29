@@ -69,12 +69,10 @@ saveUninitialized: false
 app.use(passport.initialize());
 app.use(passport.session());
 
-/** 1) Kick off Google OAuth **/
 app.get('/auth/google',
 passport.authenticate('google', { scope: ['profile','email'] })
 );
 
-/** 2) Google calls us back here **/
 app.get('/auth/google/callback',
 passport.authenticate('google', { failureRedirect: '/login', session: false }),
 (req, res) => {
@@ -83,7 +81,11 @@ passport.authenticate('google', { failureRedirect: '/login', session: false }),
     'some-very-strong-secret',
     { expiresIn: '2h' }
   );
-  res.redirect('https://shop-ease-ecommerce-app.vercel.app/dashboard');
+  const googleId = req.user.google_id;   
+  const redirectUrl =
+    `https://shop-ease-ecommerce-app.vercel.app/dashboard/products` +
+    `?googleId=${encodeURIComponent(googleId)}`;  //&
+  res.redirect(redirectUrl);
 }
 );
 

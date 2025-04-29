@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import AuthForm from '../components/AuthForm';
 import { signInWithPopup } from '../firebase';
@@ -8,6 +8,29 @@ import api from '../api';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { search } = useLocation();
+
+  // useEffect(() => {
+  //   const params   = new URLSearchParams(search);
+  //   const token    = params.get('token');
+  //   const googleId = params.get('googleId');
+  //   // localStorage.clear()
+
+  //   if (token) {
+  //     localStorage.setItem('token', token);
+  //     api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  //   }
+  //   if (googleId) {
+  //     localStorage.setItem('userId', googleId);
+  //   }
+
+
+  //   if (token && googleId) {
+  //     navigate('/dashboard', { replace: true });
+  //     console.log(googleId)
+  //     console.log(token)
+  //   }
+  // }, [search, navigate]);
 
   const handleLogin = async  ({ email, password })=> {
     try {
@@ -16,12 +39,10 @@ export default function Login() {
         password
       })
       const { token, user } = data
-
-      // 2) persist them
+      
       localStorage.setItem('token', token)
       localStorage.setItem('userId', String(user.id))
 
-      // 3) set default header for future axios calls
       api.defaults.headers.common.Authorization = `Bearer ${token}`
 
       alert('Login successful!')

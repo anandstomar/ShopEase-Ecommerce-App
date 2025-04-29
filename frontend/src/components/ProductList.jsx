@@ -13,6 +13,15 @@ export default function ProductList() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  useEffect(() => {
+    const params   = new URLSearchParams(window.location.search);
+    const googleId = params.get('googleId');
+  
+    if (googleId) {
+      localStorage.setItem('userId', googleId);
+      console.log(googleId)
+    }
+  },[]);
 
   useEffect(() => {
     setLoading(true);

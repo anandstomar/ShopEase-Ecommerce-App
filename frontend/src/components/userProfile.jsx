@@ -22,7 +22,9 @@ export default function UserProfile() {
           const res = await api.get(`/users/profile/${data.id}`);
           setProfile(res.data);
         } else {
-          const res = await api.get(`/users/profile/${userId}`);
+          const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          console.log('Found user:', data);
+          const res = await api.get(`/users/profile/${data.id}`);
           setProfile(res.data);
         }
       } catch (err) {
@@ -43,14 +45,17 @@ export default function UserProfile() {
       try {
         if (isNaN(userId)) {
           const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-          const res = await api.get(`/orders/${data.id}`);
-          setOrders(res.data);
+          console.log('Found user:', data);
+          const res = await api.get(`/users/profile/${data.id}`);
+          setProfile(res.data);
         } else {
-          const res = await api.get(`/orders/${userId}`);
-          setOrders(res.data);
+          const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          console.log('Found user:', data);
+          const res = await api.get(`/users/profile/${data.id}`);
+          setProfile(res.data);
         }
       } catch (err) {
-        console.error('Orders fetch failed:', err);
+        console.error('Profile fetch failed:', err);
       }
     };
   

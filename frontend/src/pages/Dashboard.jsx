@@ -6,7 +6,6 @@ import RazorpayCheckout from '../components/RazorpayCheckout'
 import { motion } from 'framer-motion'
 
 export default function Dashboard() {
-  const userId = localStorage.getItem('userId')
 
   return (
     <DashboardLayout>
