@@ -65,7 +65,7 @@ const loginWithGoogle = async (navigate) => {
     const { data } = await api.post('/users/firebase', { idToken });
     localStorage.setItem('token', data.token);
     localStorage.setItem("userId", uid);
-    navigate('/dashboard');
+    navigate('/dashboard');   
   } catch (err) {
     console.error('Google login failed:', err);
     alert(err.response?.data?.error || err.message);

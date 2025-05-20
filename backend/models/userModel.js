@@ -1,3 +1,4 @@
+const { UploadStream } = require('cloudinary');
 const pool = require('../config/postgresql');
 
 async function createUser({ name, email, password, googleId, firebaseUid }) {
@@ -54,6 +55,9 @@ async function getUserById(id) {
 }
 
 async function getUserByIdentifier(identifier) {
+  if (!identifier) {
+    throw new Error('Identifier is required');
+  }
   const { rows } = await pool.query(
     `SELECT id, name, email, firebase_uid, google_id
      FROM users
@@ -66,13 +70,25 @@ async function getUserByIdentifier(identifier) {
   return rows[0];
 }
 
+async function updateUserFirebaseUid(userId, firebaseUid) {
+  const { rows } = await pool.query(
+    `UPDATE users
+       SET firebase_uid = $1
+     WHERE id = $2
+   RETURNING *`,
+    [firebaseUid, userId]
+  );
+  return rows[0];
+}
+
 module.exports = {
   createUser,
   getUserByEmail,
   getUserByFirebaseUid,
   getUserByGoogleId,
   getUserById,
-  getUserByIdentifier
+  getUserByIdentifier,
+  updateUserFirebaseUid
 };
 
 

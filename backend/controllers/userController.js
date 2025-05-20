@@ -1,5 +1,10 @@
+const db = require('../config/postgresql');
 const authService = require('../services/userService');
 const {getUserById, getUserByIdentifier} = require('../models/userModel');
+const { forgotPassword } = require('../utils/forgotPassword');
+const { getUserByResetToken } = require('../services/userService');
+const bcrypt = require('bcrypt');
+
 
 async function registerUser(req, res) {
   try {
@@ -78,12 +83,42 @@ async function identifyUser(req, res) {
   }
 }
 
+
+const forgotPasswordController = async (req, res) => {
+  try {
+    await forgotPassword(req.body.email);
+    res.status(200).json({ message: 'Reset email sent' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+const resetPasswordController = async (req, res) => {
+  try {
+    const { token, email, newPassword } = req.body;
+    const user = await getUserByResetToken(token);
+    if (!user || user.email !== email) throw new Error('Invalid or expired token');
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query(
+      'UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE email = $2',
+      [hashedPassword, email]
+    );
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   firebaseCallback,
   googleOAuthCallback,
   getUsersByIds,
-  identifyUser
+  identifyUser,
+  forgotPasswordController,
+  resetPasswordController
 };
 

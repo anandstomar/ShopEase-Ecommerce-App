@@ -34,7 +34,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
     }
     try {
       const { data: order } = await axios.post(
-        'http://localhost:3000/api/payments/make-payment',
+        'http://localhost:3007/api/payments/make-payment',
         { amount, currency: 'INR', receipt: `receipt_${Date.now()}` }
       );
       const options = {
@@ -52,7 +52,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
         handler: async response => {
           try {
             const verifyRes = await axios.post(
-              'http://localhost:3000/api/payments/verify-payment',
+              'http://localhost:3007/api/payments/verify-payment',
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -66,9 +66,24 @@ export default function RazorpayCheckout({ amount: propAmount }) {
               alert('User ID not found. Please log in again.');
               console.error('User ID not found in localStorage');
             } 
-            const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+            console.log('User ID:', userId);
+             let ord={};
+            if (isNaN(userId)) {
+             const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+             ord = data.id;
+             console.log('User ID:', ord);
+            }
+            if((userId.length) > 10){
+              const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+              ord = data.id;
+            }
+            else{
+              const res = await api.get(`/users/profile/${userId}`);
+              ord = res.data.id;
+            }
+            
             await api.post('/orders/', {
-                    user_id: data.id,
+                    user_id: ord,
                     items: cartItems.map(({ product, quantity }) => ({
                       product_id: product._id,
                       quantity
@@ -76,7 +91,9 @@ export default function RazorpayCheckout({ amount: propAmount }) {
                     total: amount,
                     payment_id: response.razorpay_payment_id
                   })
-                  alert('Payment successful & order placed!')
+                  alert(
+                    'Payment successful! Your order is placed and a confirmation email is on its way.'
+                  );
                 } catch (err) {
                   console.error('Error in post-payment flow:', err)
                   alert('Something went wrong while placing your order.')

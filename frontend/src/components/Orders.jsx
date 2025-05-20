@@ -3,43 +3,44 @@ import { fetchUserOrders } from '../api'
 import api from '../api'
 
 export default function Orders() {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState([]);  
+  const userId = localStorage.getItem('userId');
 
-  const userId = localStorage.getItem('userId')
-  // useEffect(() => {
-  //   fetchUserOrders(userId).then(res => setOrders(res.data))
-  // }, [userId])
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!userId) {
+        console.log('No userId in localStorage');
+        return;
+      }
 
-   useEffect(() => {
-      const fetchOrders = async () => {
-        if (!userId) {
-          console.log('No userId in localStorage');
-          return;
+      try {
+        let res;
+        if (isNaN(userId)) {
+          const { data: { id } } = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          res = await fetchUserOrders(id);
         }
-    
-        try {
-          if (isNaN(userId)) {
-            const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-            const res = await fetchUserOrders(data.id);
-            setOrders(res.data);
-          } else {
-            const res = await fetchUserOrders(userId);
-            setOrders(res.data);
-          }
-        } catch (err) {
-          console.error('Orders fetch failed:', err);
+        if((userId.length) > 10){
+          const { data: { id } } = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+          res = await fetchUserOrders(id);
+        }else {
+          res = await fetchUserOrders(userId);
         }
-      };
-    
-      fetchOrders();
-    }, [userId]);
+        setOrders(res.data.orders);
+      } catch (err) {
+        console.error('Orders fetch failed:', err);
+      }
+    };
+
+    fetchOrders();
+  }, [userId]);
+
   
 
   return (
     <div className="space-y-4">
-      <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+      {/* <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
         Your Orders
-      </h3>
+      </h3> */}
       {orders.length === 0 ? (
         <p className="text-gray-700 dark:text-gray-300">No orders yet.</p>
       ) : (

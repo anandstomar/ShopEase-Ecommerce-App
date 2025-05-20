@@ -45,7 +45,7 @@ export default function Home() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        className="space-x-4"
+        className="flex flex-wrap gap-4 justify-center"
       >
         <Link
           to="/register"
@@ -58,6 +58,12 @@ export default function Home() {
           className="px-5 py-2 bg-green-600 hover:bg-green-700 transition rounded-lg text-white font-medium shadow"
         >
           Login
+        </Link>
+        <Link
+          to="/driverlogin"
+          className="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 transition rounded-lg text-white font-medium shadow"
+        >
+          Driver Login
         </Link>
       </motion.div>
     </div>

@@ -61,4 +61,24 @@ async function getOrderItemsByOrderId(orderId) {
   return rows;
 }
 
-module.exports = { getOrdersByUserId, getOrderItemsByOrderId, createFullOrder };
+async function getOrderStatusById(orderId) {
+  const { rows } = await pool.query(
+    `SELECT
+    o.id,
+    o.status,
+    COALESCE(dl.last_lat, o.current_lat) AS current_lat,
+    COALESCE(dl.last_lng, o.current_lng) AS current_lng,
+    d.id   AS driver_id,
+    d.name AS driver_name
+  FROM orders o
+  LEFT JOIN drivers d
+    ON o.driver_id = d.id
+  LEFT JOIN driver_locations dl
+    ON d.id = dl.driver_id::integer
+  WHERE o.id = $1`,
+ [orderId]
+  );
+  return rows[0] || null;
+}
+
+module.exports = { getOrdersByUserId, getOrderItemsByOrderId, createFullOrder, getOrderStatusById };

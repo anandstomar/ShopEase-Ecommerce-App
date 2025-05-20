@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://shopeaseecommerce.store/api';
+const BASE_URL = 'http://localhost:3007/api';
 
 
 const api = axios.create({
-  baseURL: 'https://shopeaseecommerce.store/api', 
+  baseURL: 'http://localhost:3007/api', 
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ token: 'BITaTIemTqctnE7VGQ3Birc8z2gS7CCEAWvgY7XDMTsCFx-6kWP5hw6u3oxanZ9aj6wZDAt64goV0l6SrNkI7xM' }),
 });

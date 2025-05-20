@@ -5,8 +5,10 @@ const {
   createUser,
   getUserByEmail,
   getUserByFirebaseUid,
-  getUserByGoogleId
+  getUserByGoogleId,
+  updateUserFirebaseUid
 } = require('../models/userModel');
+const db = require('../config/postgresql'); 
 
 const JWT_SECRET     = 'some-very-strong-secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -37,15 +39,35 @@ async function loginEmail({ email, password }) {
   return signToken(user);
 }
 
+// async function loginWithFirebase(idToken) {
+//   const decoded = await admin.auth().verifyIdToken(idToken);
+//   const { uid, name, email } = decoded;
+//   let user = await getUserByFirebaseUid(uid);
+//   if (!user) {
+//     user = await createUser({ name, email, firebaseUid: uid });
+//   }
+//   return signToken(user);
+// }
+
 async function loginWithFirebase(idToken) {
   const decoded = await admin.auth().verifyIdToken(idToken);
   const { uid, name, email } = decoded;
+
   let user = await getUserByFirebaseUid(uid);
-  if (!user) {
-    user = await createUser({ name, email, firebaseUid: uid });
+  if (user) {
+    return signToken(user);
   }
+
+  user = await getUserByEmail(email);
+  if (user) {
+    user = await updateUserFirebaseUid(user.id, uid);
+    return signToken(user);
+  }
+
+  user = await createUser({ name, email, firebaseUid: uid });
   return signToken(user);
 }
+
 
 async function loginWithGoogleOAuth({ googleId, name, email }) {
   let user = await getUserByGoogleId(googleId);
@@ -55,11 +77,28 @@ async function loginWithGoogleOAuth({ googleId, name, email }) {
   return signToken(user);
 }
 
+const saveResetToken = async (email, token, expires) => {
+  await db.query(
+    'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+    [token, new Date(expires), email]
+  );
+};
+
+const getUserByResetToken = async (token) => {
+  const result = await db.query(
+    'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
+    [token]
+  );
+  return result.rows[0];
+};
+
 module.exports = {
   registerEmail,
   loginEmail,
   loginWithFirebase,
-  loginWithGoogleOAuth
+  loginWithGoogleOAuth,
+  saveResetToken,
+  getUserByResetToken
 };
 
 

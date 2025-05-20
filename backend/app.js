@@ -9,13 +9,16 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const { runNotificationConsumer } = require('./services/notificationService');
 const { connectProducers, runConsumer  } = require('./config/kafka'); 
 const paymentRoutes = require('./routes/paymentRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 const session = require('express-session');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3007;
 const cors = require('cors');
 const { createUser,getUserByEmail } = require('./models/userModel');
+const { initSocket } = require('./config/socketio');
+const http = require('http');
 
 const app = express();
 app.use(express.json());
@@ -28,6 +31,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/drivers', driverRoutes);
 
 passport.use(new GoogleStrategy({
   clientID:     '11253895168-59glkmmn2uu5ppqiaf7pod2c5kg35v4q.apps.googleusercontent.com',
@@ -83,7 +87,7 @@ passport.authenticate('google', { failureRedirect: '/login', session: false }),
   );
   const googleId = req.user.google_id;   
   const redirectUrl =
-    `https://shop-ease-ecommerce-app.vercel.app/dashboard/products` +
+    `http://localhost:5173/dashboard/products` +
     `?googleId=${encodeURIComponent(googleId)}`;  //&
   res.redirect(redirectUrl);
 }
@@ -103,7 +107,11 @@ apolloServer.start().then(() => {
       //   console.error('Notification consumer error:', err);
       //   process.exit(1);
       // });
-      app.listen(PORT, () => {
+
+      const server = http.createServer(app);
+      initSocket(server);
+
+      server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`GraphQL endpoint available at http://localhost:${PORT}/graphql`);
       });

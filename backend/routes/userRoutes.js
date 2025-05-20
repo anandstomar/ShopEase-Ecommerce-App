@@ -5,7 +5,9 @@ const {
   firebaseCallback,
   googleOAuthCallback,
   getUsersByIds,
-  identifyUser
+  identifyUser,
+  forgotPasswordController,
+  resetPasswordController 
 } = require('../controllers/userController');
 const {  getUserByAnyIdentifier } = require('../models/userModel');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -29,6 +31,9 @@ router.get('/me', authMiddleware, (req, res) => {
 });
 
 router.get('/identify/:identifier', identifyUser);
+
+router.post('/forgot-password', forgotPasswordController);
+router.post('/reset-password', resetPasswordController);
   
   
 module.exports = router;

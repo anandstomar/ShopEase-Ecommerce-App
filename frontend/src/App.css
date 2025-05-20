@@ -1,5 +1,5 @@
 /* 1) Import Tailwind global styles */
-@import './output.css';
+@import '../dist/output.css';
 
 /* 2) Smooth scrolling for in‑page anchors */
 html {

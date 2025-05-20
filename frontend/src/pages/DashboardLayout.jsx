@@ -7,9 +7,9 @@ export default function DashboardLayout() {
 
   const menuItems = [
     { to: 'products', label: 'Products' },
-    { to: 'orders',   label: 'Orders'   },
-    { to: 'cart',     label: 'Cart'     },
-    { to: 'payment',  label: 'Payment'  },
+    // { to: 'orders',   label: 'Orders'   },
+     { to: 'cart',     label: 'Cart'     },
+    // { to: 'payment',  label: 'Payment'  },
     { to: 'profile',  label: 'Profile'  },
     { to: 'products/new', label: 'Add Product' },
   ]

@@ -59,6 +59,14 @@ export default function AuthForm({ onSubmit, type}) {
       >
         Sign in with Google
       </motion.button>
+      <div className="text-sm mt-2 text-right">
+    <a
+      href="/forgot-password"
+      className="text-red-400 hover:underline"
+    >
+      Forgot password?
+    </a>
+  </div>
     </form>
   );
 }
