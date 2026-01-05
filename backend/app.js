@@ -99,10 +99,10 @@ apolloServer.start().then(() => {
 
   const startApp = async () => {
     try {
-      //await connectProducers() ;
-      // console.log("Kafka producer connected");
+      await connectProducers() ;
+      console.log("Kafka producer connected");
       // console.log(`Notification Service running on port ${PORT}`);
-      //await runNotificationConsumer();
+      await runNotificationConsumer();
       //  await runConsumer().catch(err => {
       //   console.error('Notification consumer error:', err);
       //   process.exit(1);

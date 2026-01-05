@@ -12,7 +12,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import UserProfile from './components/userProfile'
 import AddProductPage from './pages/AddProducts'
-import useNotifications from './components/userNotification'
+import useNotifications from './hooks/userNotification'
 import ForgotPassword from './pages/forgetPassword';
 import ResetPassword from './pages/resetPassword';
 import CartWithCheckout from './components/checkout'
@@ -20,6 +20,8 @@ import './App.css'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import DriverLogin from './pages/DriverLogin';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function App() {
@@ -33,6 +35,7 @@ export default function App() {
     }
   });
   return (
+    <>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -56,6 +59,18 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+
+        <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
+    </>
   )
 }
 

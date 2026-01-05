@@ -38,7 +38,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
         { amount, currency: 'INR', receipt: `receipt_${Date.now()}` }
       );
       const options = {
-        key: "rzp_test_Qf5XnqEem8g6sI",
+        key: "rzp_test_PBUluwX3e15zwd",
         amount: order.amount,
         currency: order.currency,
         name: 'ShopEase',
@@ -51,6 +51,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
         },
         handler: async response => {
           try {
+            console.log("payment respnse",response);
             const verifyRes = await axios.post(
               'http://localhost:3007/api/payments/verify-payment',
               {
@@ -59,7 +60,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
                 razorpay_signature: response.razorpay_signature,
               }
             );
-            alert(verifyRes.data.message);
+            // alert(verifyRes.data.message);
             dispatch(clearCart());
             const userId = localStorage.getItem('userId')
             if (!userId) {
@@ -71,7 +72,6 @@ export default function RazorpayCheckout({ amount: propAmount }) {
             if (isNaN(userId)) {
              const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
              ord = data.id;
-             console.log('User ID:', ord);
             }
             if((userId.length) > 10){
               const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
@@ -91,9 +91,9 @@ export default function RazorpayCheckout({ amount: propAmount }) {
                     total: amount,
                     payment_id: response.razorpay_payment_id
                   })
-                  alert(
-                    'Payment successful! Your order is placed and a confirmation email is on its way.'
-                  );
+                  // alert(
+                  //   'Payment successful! Your order is placed and a confirmation email is on its way.'
+                  // );
                 } catch (err) {
                   console.error('Error in post-payment flow:', err)
                   alert('Something went wrong while placing your order.')

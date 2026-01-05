@@ -1,14 +1,16 @@
 const { saveDeviceToken } = require('../models/NotificationModel');
-const { getUserByUid } = require('../models/userModel');
+const { getUserByFirebaseUid } = require('../models/userModel');
 const admin = require('../config/firebase'); 
 
 async function registerDevice(req, res) {
   try {
     const hdr   = req.headers.authorization || '';
     const idToken = hdr.replace(/^Bearer\s+/, '');
+    console.log('Backend received ID token (first 30 chars):', idToken.substring(0, 30) + '...'); // <--- ADD THIS LINE
+    console.log('Backend received ID token length:', idToken.length); // <--- ADD THIS LINE
     const decoded = await admin.auth().verifyIdToken(idToken);
 
-    const dbUser = await getUserByUid(decoded.uid);
+    const dbUser = await getUserByFirebaseUid(decoded.uid);
     if (!dbUser) return res.status(404).json({ error: 'User not found' });
     const userId = dbUser.id;
 

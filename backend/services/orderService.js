@@ -7,6 +7,7 @@ const {
 const { ecommerceProducer } = require('../config/kafka');
 const { sendEmail } = require('../utils/emailService');
 const { getUserById } = require('../models/userModel');
+const { notifyOrderCreated } = require('../services/notificationService');
 
 async function placeOrder(orderData) {
   const { user_id, items, total, payment_id } = orderData;
@@ -14,54 +15,73 @@ async function placeOrder(orderData) {
   // 1) Create DB transaction
   const order = await createFullOrder({ user_id, items, total, payment_id });
 
-  // 2) Publish Kafka event
+  // // 2) Publish Kafka event
+  // try {
+  //   await ecommerceProducer.send({
+  //     topic: 'orders',
+  //     messages: [{
+  //       key: String(order.id),
+  //       value: JSON.stringify({
+  //         orderId: order.id,
+  //         user_id,
+  //         items,
+  //         total,
+  //         created_at: order.created_at,
+  //       })
+  //     }]
+  //   });
+  //   console.log(`Order event published for order id ${order.id}`);
+  // } catch (err) {
+  //   console.error('Kafka publish error:', err);
+  // }
+
   try {
-    await ecommerceProducer.send({
-      topic: 'orders',
-      messages: [{
-        key: String(order.id),
-        value: JSON.stringify({
-          orderId: order.id,
-          user_id,
-          items,
-          total,
-          created_at: order.created_at,
-        })
-      }]
+    const payload = JSON.stringify({
+      orderId: order.id,
+      userId: user_id,
+      total: total,
+      created_at: order.created_at
     });
-    console.log(`Order event published for order id ${order.id}`);
+
+    await ecommerceProducer.send({
+      topic: 'order.created',
+      messages: [{ key: String(order.id), value: payload }]
+    });
+    console.log(`[Kafka] Event sent to 'order.created' for Order ID: ${order.id}`);
   } catch (err) {
-    console.error('Kafka publish error:', err);
-    // we choose not to rollback the DB here
+    console.error('[Kafka] Failed to send event:', err);
   }
 
   // 3) Lookup user + send email
   const user = await getUserById(user_id);
-  if (!user || !user.email) {
+  if (user && user.email) {
+    const subject = 'Your Order Confirmation';
+    const body = `Hi ${user.name || 'there'},
+
+Thank you for your order!\n• Order ID: ${order.id}\n• Total: ₹${total.toFixed(2)}\n• Placed on: ${order.created_at.toISOString()}\n
+We’ll notify you once it ships.\n
+– The E‑Commerce Team`;
+
+    try {
+      await sendEmail(user.email, subject, body);
+      console.log(`Confirmation email sent to ${user.email}`);
+    } catch (err) {
+      console.error('Email send failed:', err);
+    }
+  } else {
     console.warn(`Cannot send email: user ${user_id} has no email`);
-    return order;
   }
 
-  const subject = 'Your Order Confirmation';
-  const body = `
-Hi ${user.name || 'there'},
-
-Thank you for your order!
-• Order ID: ${order.id}
-• Total: ₹${total.toFixed(2)}
-• Placed on: ${order.created_at.toISOString()}
-
-We’ll notify you once it ships.
-
-– The E-Commerce Team
-`.trim();
-
-  try {
-    await sendEmail(user.email, subject, body);
-    console.log(`Confirmation email sent to ${user.email}`);
-  } catch (err) {
-    console.error('Email send failed:', err);
-  }
+  // // 4) Send push notification
+  // try {
+  //   await notifyOrderCreated({
+  //     userId: user_id,
+  //     orderId: order.id,
+  //     total: total
+  //   });
+  // } catch (notifErr) {
+  //   console.error('Notification service error:', notifErr);
+  // }
 
   return order;
 }

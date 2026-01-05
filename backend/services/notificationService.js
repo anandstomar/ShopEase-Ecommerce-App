@@ -1,40 +1,110 @@
-const admin = require('firebase-admin');
-const { getDeviceTokensByUserId, getAllDeviceTokens } = require('../models/NotificationModel');
+const admin = require('../config/firebase'); 
+const { getDeviceTokensByUserId } = require('../models/NotificationModel');
+const { notificationConsumer } = require('../config/kafka'); // Import Consumer
 
-async function sendNotification(tokens, payload) {
-  if (!tokens.length) return;
-  const message = {
-    tokens,
-    notification: payload.notification,
-    data: payload.data || {},
-  };
-  const response = await admin.messaging().sendMulticast(message);
-  console.log(`Sent ${response.successCount} notifications, ${response.failureCount} failures.`);
+// --- Kafka Consumer Logic ---
+async function runNotificationConsumer() {
+  try {
+    await notificationConsumer.connect();
+    await notificationConsumer.subscribe({ topic: 'order.created', fromBeginning: false });
+    console.log('👂 Notification Service listening on "order.created"');
+
+    await notificationConsumer.run({
+      eachMessage: async ({ topic, message }) => {
+        const event = JSON.parse(message.value.toString());
+        console.log(`[Kafka] Received event for Order ${event.orderId}`);
+        
+        if (topic === 'order.created') {
+          await notifyOrderCreated(event);
+        }
+      },
+    });
+  } catch (err) {
+    console.error('[Kafka] Consumer error:', err);
+  }
 }
 
+// --- FCM Logic ---
 async function notifyOrderCreated(event) {
   const tokens = await getDeviceTokensByUserId(event.userId);
-  await sendNotification(tokens, {
+  if (!tokens.length) {
+    console.log(`[FCM] No devices found for User ${event.userId}`);
+    return;
+  }
+
+  const message = {
     notification: {
-      title: 'Order Confirmed',
-      body: `Your order #${event.orderId} has been placed! Total: ₹${event.total}`,
+      title: 'Order Placed!',
+      body: `Your order #${event.orderId} of ₹${event.total} is confirmed.`
     },
     data: { orderId: String(event.orderId) },
-  });
+    tokens: tokens
+  };
+
+  try {
+    const response = await admin.messaging().sendEachForMulticast(message);
+    console.log(`[FCM] Sent: ${response.successCount} success, ${response.failureCount} failed.`);
+  } catch (err) {
+    console.error('[FCM] Send error:', err);
+  }
 }
 
-async function notifyProductUpdated(event) {
-  const tokens = await getAllDeviceTokens();
-  await sendNotification(tokens, {
-    notification: {
-      title: 'Product Updated',
-      body: `${event.name} details were updated.`,
-    },
-    data: { productId: String(event.productId) },
-  });
-}
+module.exports = { runNotificationConsumer, notifyOrderCreated };
 
-module.exports = { notifyOrderCreated, notifyProductUpdated }
+
+
+
+// const admin = require('firebase-admin');
+// const { getDeviceTokensByUserId, getAllDeviceTokens } = require('../models/NotificationModel');
+
+// async function sendNotification(tokens, payload) {
+//   if (!tokens.length) return;
+//   const message = {
+//     tokens,
+//     notification: payload.notification,
+//     data: payload.data || {},
+//   };
+//   const response = await admin.messaging().sendEachForMulticast(message);
+//   console.log(`Sent ${response.successCount} notifications, ${response.failureCount} failures.`);
+//   if (response.failureCount > 0) {
+//     const failedTokensInfo = [];
+//     response.responses.forEach((resp, idx) => {
+//       if (!resp.success) {
+//         // Log the token itself, and the error code/message for detailed debugging
+//         failedTokensInfo.push({
+//           token: tokens[idx],
+//           error: resp.error ? { code: resp.error.code, message: resp.error.message } : 'Unknown error'
+//         });
+//       }
+//     });
+//     console.error('Detailed list of failed tokens and errors:', failedTokensInfo);
+//   }
+// }
+
+// async function notifyOrderCreated(event) {
+//   const tokens = await getDeviceTokensByUserId(event.userId);
+//   console.log(`Sending order created notification to ${tokens.length} device for user ${event.userId}`);
+//   await sendNotification(tokens, {
+//     notification: {
+//       title: 'Order Confirmed',
+//       body: `Your order #${event.orderId} has been placed! Total: ₹${event.total}`,
+//     },
+//     data: { orderId: String(event.orderId) },
+//   });
+// }
+
+// async function notifyProductUpdated(event) {
+//   const tokens = await getAllDeviceTokens();
+//   await sendNotification(tokens, {
+//     notification: {
+//       title: 'Product Updated',
+//       body: `${event.name} details were updated.`,
+//     },
+//     data: { productId: String(event.productId) },
+//   });
+// }
+
+// module.exports = { notifyOrderCreated, notifyProductUpdated }
 
 
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import io from 'socket.io-client';
 import api from '../api';
-import { GOOGLE_MAPS_LIBRARIES }           from '../../public/googleMaps';
+import { GOOGLE_MAPS_LIBRARIES }           from './googleMaps';
 
 export default function OrderTracker({ orderId }) {
   const [pos, setPos]       = useState(null);

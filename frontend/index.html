@@ -3,22 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link rel="stylesheet" href="./dist/output.css">
+
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" href="/dist/output.css" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React</title>
+
+    <!-- 1️⃣ Razorpay Checkout.js (must load BEFORE your app code) -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- 2️⃣ Dark‑mode initializer -->
     <script>
       if (
         localStorage.theme === 'dark' ||
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        (!('theme' in localStorage) &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches)
       ) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
-    </script>   
+    </script>
   </head>
   <body>
+    <!-- Your React root -->
     <div id="root"></div>
+
+    <!-- 3️⃣ Service Worker registration for FCM (optional) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/firebase-messaging-sw.js')
+            .then((reg) => console.log('SW registered, scope:', reg.scope))
+            .catch((err) =>
+              console.error('SW registration failed:', err)
+            );
+        });
+
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          const { title, body, icon } = event.data.notification || {};
+          if (title) {
+            new Notification(title, { body, icon });
+          }
+        });
+      }
+    </script>
+
+    <!-- 4️⃣ Your React entrypoint -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
