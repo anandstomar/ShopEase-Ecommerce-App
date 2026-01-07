@@ -3,7 +3,7 @@
 const admin = require('firebase-admin');
 
 try {
-  const serviceAccount = require('/etc/secrets/serviceAccountKey.json'); // <--- CHECK THIS PATH AND FILENAME!
+  const serviceAccount = require('./firebase-service-account.json'); // <--- CHECK THIS PATH AND FILENAME!
   console.log('Service Account JSON loaded successfully.'); // Add this log
   console.log('Service Account Project ID:', serviceAccount.project_id); // Optional: further verification
 
