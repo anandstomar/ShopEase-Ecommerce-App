@@ -13,9 +13,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://ec2-35-154-100-109.ap-south-1.compute.amazonaws.com:3000',
+        target: 'https://shopease-ecommerce-app-jv4u.onrender.com',
         changeOrigin: true,
-        secure: false
+        secure: true,
       }
     }
   }
