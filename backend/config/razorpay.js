@@ -1,6 +1,5 @@
-// config/razorpay.js
 const Razorpay = require('razorpay');
-require('dotenv').config();  // will read from project‑root .env by default
+require('dotenv').config();  
 
 const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
 

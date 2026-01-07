@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3007/api';
+const BASE_URL = 'https://shopease-ecommerce-app-jv4u.onrender.com/api';
 
 
 const api = axios.create({
