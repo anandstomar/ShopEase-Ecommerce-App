@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams }            from 'react-router-dom';
-import OrderTracker             from '../components/OrderTrack';
+import OrderTracker             from '../components/orderTrack';
 import EmbedMap                 from '../components/EmbedMaps';
 import api                      from '../api';
 
