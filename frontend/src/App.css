@@ -1,5 +1,10 @@
 /* 1) Import Tailwind global styles */
-@import '../outputs.css';
+/* @import '../outputs.css'; */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your other custom CSS below... */
 
 
 /* 2) Smooth scrolling for in‑page anchors */
