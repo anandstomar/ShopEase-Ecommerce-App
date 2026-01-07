@@ -34,7 +34,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
     }
     try {
       const { data: order } = await axios.post(
-        'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/make-payment',
+        'https://shopease-ecommerce-app-jv4u.onrender.com/api/api/payments/make-payment',
         { amount, currency: 'INR', receipt: `receipt_${Date.now()}` }
       );
       const options = {
@@ -53,7 +53,7 @@ export default function RazorpayCheckout({ amount: propAmount }) {
           try {
             console.log("payment respnse",response);
             const verifyRes = await axios.post(
-              'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/verify-payment',
+              'https://shopease-ecommerce-app-jv4u.onrender.com/api/api/payments/verify-payment',
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,

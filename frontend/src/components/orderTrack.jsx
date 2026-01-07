@@ -28,7 +28,7 @@ export default function OrderTracker({ orderId }) {
 
   // 3) WebSocket live updates
   useEffect(() => {
-    socketRef.current = io('http://localhost:3007');
+    socketRef.current = io('https://shopease-ecommerce-app-jv4u.onrender.com');
     socketRef.current.emit('joinRoom', `order_${orderId}`);
     socketRef.current.on('locationUpdate', data => {
       setPos({ lat: data.lat, lng: data.lng });

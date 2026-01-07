@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://shopease-ecommerce-app-jv4u.onrender.com/api';
+const BASE_URL = 'https://shopease-ecommerce-app-jv4u.onrender.com/api'; //'http://localhost:3007/api'
 
 
 const api = axios.create({
   baseURL: BASE_URL, 
   headers: { 'Content-Type': 'application/json' },
-  //body: JSON.stringify({ token: 'BITaTIemTqctnE7VGQ3Birc8z2gS7CCEAWvgY7XDMTsCFx-6kWP5hw6u3oxanZ9aj6wZDAt64goV0l6SrNkI7xM' }),
 });
 
 api.interceptors.request.use(config => {

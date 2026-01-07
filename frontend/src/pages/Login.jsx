@@ -126,7 +126,7 @@ export default function Login() {
           onSubmit={handleLogin }
         /><hr className="border-gray-600" />
         <a
-          href="http://localhost:3007/auth/google"
+          href="https://shopease-ecommerce-app-jv4u.onrender.com/auth/google"
           className="btn w-full bg-white text-black hover:bg-gray-200"
         >
           Continue with Google
