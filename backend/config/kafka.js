@@ -1,19 +1,19 @@
 const { Kafka } = require('kafkajs');
 
 // require('dotenv').config(); 
+const { KAFKA_USER, KAFKA_PASSWORD } = process.env;
 
 const kafka = new Kafka({
   clientId: 'ecommerce_app',
   brokers: ['pkc-921jm.us-east-2.aws.confluent.cloud:9092'], 
   
 
-  ssl: { rejectUnauthorized: false }, // Try this ONLY if standard ssl: true failsssl: { rejectUnauthorized: false }, // Try this ONLY if standard ssl: true fails 
+  ssl: { rejectUnauthorized: false },
   
-  // 3. ADD AUTHENTICATION
   sasl: {
     mechanism: 'plain',
-    username: 'KUAND5WSVLSCLXEO',   
-    password: 'cflt5Yu3j/JfKC4rEaiHsT8oro5YU0hYPVd5UdpWaY+F0zMHRWi5tC06rDM8VomQ'  
+    username: KAFKA_USER,   
+    password: KAFKA_PASSWORD  
   },
   connectionTimeout: 10000, 
   authenticationTimeout: 10000,
@@ -21,7 +21,6 @@ const kafka = new Kafka({
 
 const ecommerceProducer = kafka.producer();
 
-// 2. Consumer for Notification Service
 const notificationConsumer = kafka.consumer({
   groupId: 'notification-group',
   sessionTimeout: 30000,
