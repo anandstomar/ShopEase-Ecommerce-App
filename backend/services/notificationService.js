@@ -1,6 +1,7 @@
-const admin = require('../config/firebase'); 
+const admin = require('../config/firebase');
 const { getDeviceTokensByUserId } = require('../models/NotificationModel');
 const { notificationConsumer } = require('../config/kafka'); // Import Consumer
+const { pool: db } = require('../config/postgresql');
 
 // --- Kafka Consumer Logic ---
 async function runNotificationConsumer() {
@@ -13,7 +14,7 @@ async function runNotificationConsumer() {
       eachMessage: async ({ topic, message }) => {
         const event = JSON.parse(message.value.toString());
         console.log(`[Kafka] Received event for Order ${event.orderId}`);
-        
+
         if (topic === 'order.created') {
           await notifyOrderCreated(event);
         }
@@ -22,6 +23,10 @@ async function runNotificationConsumer() {
   } catch (err) {
     console.error('[Kafka] Consumer error:', err);
   }
+}
+
+async function deleteDeviceToken(token) {
+  await db.query('DELETE FROM user_devices WHERE device_token = $1', [token]);
 }
 
 // --- FCM Logic ---
@@ -44,6 +49,21 @@ async function notifyOrderCreated(event) {
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
     console.log(`[FCM] Sent: ${response.successCount} success, ${response.failureCount} failed.`);
+    if (response.failureCount > 0) {
+      const failedTokens = [];
+      for (let idx = 0; idx < response.responses.length; idx++) {
+        const resp = response.responses[idx];
+        if (!resp.success) {
+          failedTokens.push(tokens[idx]);
+          console.error(`❌ FCM Failure Reason:`, resp.error);
+        }
+        if (resp.error && resp.error.code === 'messaging/registration-token-not-registered') {
+          console.log(`🗑️ Removing stale token: ${tokens[idx]}`);
+          // Add a function to delete this specific token from your DB
+          await deleteDeviceToken(tokens[idx]);
+        }
+      }
+    }
   } catch (err) {
     console.error('[FCM] Send error:', err);
   }

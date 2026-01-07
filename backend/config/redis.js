@@ -1,13 +1,20 @@
 const redis = require('redis');
+require('dotenv').config();
 
-const REDIS_HOST = 'localhost';// 'redis' if using Docker Compose
-const REDIS_PORT = 6379;
+// const REDIS_HOST = 'red-d5eft6ngi27c73avusd0';
+// const REDIS_PORT = 6379;
+
+// const client = redis.createClient({
+//   socket: {
+//     host: REDIS_HOST,
+//     port: REDIS_PORT
+//   }
+// });
+
+const REDIS_URL = process.env.REDIS_URL; 
 
 const client = redis.createClient({
-  socket: {
-    host: REDIS_HOST,
-    port: REDIS_PORT
-  }
+  url: REDIS_URL
 });
 
 client.on('error', err => {
@@ -17,7 +24,8 @@ client.on('error', err => {
 (async () => {
   try {
     await client.connect();
-    console.log(`✅ Connected to Redis at ${REDIS_HOST}:${REDIS_PORT}`);
+    //console.log(`✅ Connected to Redis at ${REDIS_HOST}:${REDIS_PORT}`);
+    console.log(`✅ Connected to Redis at ${REDIS_URL}`);
   } catch (err) {
     console.error('Error connecting to Redis:', err);
   }

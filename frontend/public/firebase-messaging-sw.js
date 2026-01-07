@@ -20,24 +20,24 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // 4️⃣ Handle background messages
-// messaging.onBackgroundMessage(payload => {
-//   console.log('[firebase-messaging-sw.js] Received background message ', payload);
+messaging.onBackgroundMessage(payload => {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
-//   const notificationTitle   = payload.notification?.title   || 'Background Message';
-//   const notificationOptions = {
-//     body:    payload.notification?.body    || '',
-//     icon:    payload.notification?.icon    || '/default-icon.png',
-//     data:    payload.data                  || {}
-//   };
+  const notificationTitle   = payload.notification?.title   || 'Background Message';
+  const notificationOptions = {
+    body:    payload.notification?.body    || '',
+    icon:    payload.notification?.icon    || '/default-icon.png',
+    data:    payload.data                  || {}
+  };
 
-//   self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 
-//   // Optionally relay to open pages
-//   self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
-//     .then(clients => {
-//       clients.forEach(c => c.postMessage(payload));
-//     });
-// });
+  // Optionally relay to open pages
+  self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
+    .then(clients => {
+      clients.forEach(c => c.postMessage(payload));
+    });
+});
 
 
 
