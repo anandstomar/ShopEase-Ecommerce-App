@@ -7,7 +7,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { runNotificationConsumer } = require('./services/notificationService');
-const { connectProducers, runConsumer  } = require('./config/kafka'); 
+const { connectProducers, runConsumer } = require('./config/kafka');
 const paymentRoutes = require('./routes/paymentRoutes');
 const driverRoutes = require('./routes/driverRoutes');
 const session = require('express-session');
@@ -16,9 +16,11 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
 const PORT = process.env.PORT || 3007;
 const cors = require('cors');
-const { createUser,getUserByEmail } = require('./models/userModel');
+const { createUser, getUserByEmail } = require('./models/userModel');
 const { initSocket } = require('./config/socketio');
 const http = require('http');
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
+const pool = require('./config/postgresql');
 
 const app = express();
 app.use(express.json());
@@ -34,63 +36,84 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/drivers', driverRoutes);
 
 passport.use(new GoogleStrategy({
-  clientID:     '11253895168-59glkmmn2uu5ppqiaf7pod2c5kg35v4q.apps.googleusercontent.com',
-  clientSecret: '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',
-  callbackURL:  '/auth/google/callback'
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: '/auth/google/callback'
 },
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails[0].value;
-    let user = await getUserByEmail(email);
-    if (!user) {
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      // const email = profile.emails[0].value;
+      // let user = await getUserByEmail(email);
+      // if (!user) {
+      //   const email = profile.emails[0].value;
+      //   const name  = profile.displayName;
+      //   console.log("name ", name)
+      //   user = await createUser({
+      //     name:     profile.displayName,
+      //     email,
+      //     googleId: profile.id
+      //   });
+
       const email = profile.emails[0].value;
-      const name  = profile.displayName;
-      user = await createUser({
-        name:     profile.displayName,
-        email,
-        googleId: profile.id
-      });
+      let user = await getUserByEmail(email);
+
+      if (user) {
+        if (!user.google_id) {
+          const { rows } = await pool.query(
+            `UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *`,
+            [profile.id, email]
+          );
+          user = rows[0];
+        }
+      } else {
+        user = await createUser({
+          name: profile.displayName,
+          email,
+          googleId: profile.id
+        });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
     }
-    return done(null, user);
-  } catch (err) {
-    return done(err);
   }
-}
 ));
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
-const user = await getUserByEmail(id);
-done(null, user);
+  const user = await getUserByEmail(id);
+  done(null, user);
 });
 
 
 app.use(session({
-secret:            'a06461067d3888fd577a5742ea653f023043e87728fba28279c35abbd32e042f7b4add266bafaa721d93e1a01f956bb293a46d61545bcae82a3b16520f360e6d',
-resave:            false,
-saveUninitialized: false
+  secret: SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/auth/google',
-passport.authenticate('google', { scope: ['profile','email'] })
+  passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 app.get('/auth/google/callback',
-passport.authenticate('google', { failureRedirect: '/login', session: false }),
-(req, res) => {
-  const token = jwt.sign(
-    { id: req.user.id, email: req.user.email },
-    'some-very-strong-secret',
-    { expiresIn: '2h' }
-  );
-  const googleId = req.user.google_id;   
-  const redirectUrl =
-    `http://localhost:5173/dashboard/products` +
-    `?googleId=${encodeURIComponent(googleId)}`;  //&
-  res.redirect(redirectUrl);
-}
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  (req, res) => {
+    const token = jwt.sign(
+      { id: req.user.id, email: req.user.email },
+      'some-very-strong-secret',
+      { expiresIn: '2h' }
+    );
+    const googleId = req.user.google_id;
+    console.log('Google ID:', googleId);
+    console.log('JWT Token:', token);
+    const redirectUrl =
+      `http://localhost:5173/dashboard/products` +
+      `?googleId=${encodeURIComponent(googleId)}`;  //&
+    res.redirect(redirectUrl);
+  }
 );
 
 
@@ -99,7 +122,7 @@ apolloServer.start().then(() => {
 
   const startApp = async () => {
     try {
-      await connectProducers() ;
+      await connectProducers();
       console.log("Kafka producer connected");
       // console.log(`Notification Service running on port ${PORT}`);
       await runNotificationConsumer();
@@ -120,8 +143,8 @@ apolloServer.start().then(() => {
     }
   };
   startApp();
-});  
+});
 
 
-  
+
 
