@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import json
 import signal
 import sys
-MONGODB_URL = 'mongodb+srv://Ananddb:Anand2003@cluster0.hhg4k.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URL = process.env.MONGODB_URL;
 
 # MongoDB setup
 mongo_client = MongoClient(MONGODB_URL)
