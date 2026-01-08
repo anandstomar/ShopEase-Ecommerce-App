@@ -40,7 +40,7 @@ export default function useNotifications() {
           const actualIdToken = await user.getIdToken(true); // Add true to force refresh
           console.log('Sending FCM token with ID token:', actualIdToken); // <--- ADD THIS LINE
           await axios.post(
-            'http://localhost:3007/api/notifications/devices',
+            'https://shopease-ecommerce-app-jv4u.onrender.com/api/notifications/devices',
             { token: fcmToken },
             { headers: { Authorization: `Bearer ${actualIdToken}` } }
           );
