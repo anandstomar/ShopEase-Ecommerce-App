@@ -1,20 +1,27 @@
 // public/firebase-messaging-sw.js
 
 // 1️⃣ Load the compat versions via importScripts
-importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// 2️⃣ Initialize the firebase global
-firebase.initializeApp({
-  apiKey: "AIzaSyDUCRhKKIPyKS2Dek6uksjeNUGBQ2--IdM",
-  authDomain: "e-commerce-app-3bae3.firebaseapp.com",
-  databaseURL: "https://e-commerce-app-3bae3-default-rtdb.firebaseio.com",
-  projectId: "e-commerce-app-3bae3",
-  storageBucket: "e-commerce-app-3bae3.firebasestorage.app",
-  messagingSenderId: "11253895168",
-  appId: "1:11253895168:web:b80bb45a78b5fe070148e5",
-  measurementId: "G-KMLM1P6X35"
-});
+const firebaseConfig = {
+  // apiKey: "AIzaSyDUCRhKKIPyKS2Dek6uksjeNUGBQ2--IdM",
+  // authDomain: "e-commerce-app-3bae3.firebaseapp.com",
+  // databaseURL: "https://e-commerce-app-3bae3-default-rtdb.firebaseio.com",
+  // projectId: "e-commerce-app-3bae3",
+  // storageBucket: "e-commerce-app-3bae3.firebasestorage.app",
+  // messagingSenderId: "11253895168",
+  // appId: "1:11253895168:web:b80bb45a78b5fe070148e5",
+  // measurementId: "G-KMLM1P6X35"
+  apiKey: "AIzaSyAR7IQQevKp-YKUgqfmOTLDYINMuQ1rkEo",
+  authDomain: "ecommerce-notification-2.firebaseapp.com",
+  projectId: "ecommerce-notification-2",
+  storageBucket: "ecommerce-notification-2.firebasestorage.app",
+  messagingSenderId: "860927112440",
+  appId: "1:860927112440:web:36bddce526597a4331b70d",
+  measurementId: "G-LQ3GJP2L9Y"
+};
+ firebase.initializeApp(firebaseConfig);
 
 // 3️⃣ Obtain the messaging instance from the global
 const messaging = firebase.messaging();

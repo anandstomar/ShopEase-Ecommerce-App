@@ -23,12 +23,16 @@ export default function useNotifications() {
     }
 
     try {
-      // Get the FCM token
-      const fcmToken = await getToken(messaging, {
-        // IMPORTANT: Ensure this VAPID key matches your Firebase project's web configuration
-        vapidKey: 'BJcb6KxGdV62XZA15lSo56aQYy2mixYR325Hvzo1X-kGeyUSQdpzSkZwNzpKmUwAXFanuQTnQbGQ2BiDLk-jfcQ'
-      });
-      console.log('FCM token:', fcmToken);
+    const fcmToken = await getToken(messaging, {
+        vapidKey: "BPdU9oYz7igbT8H8QvmZek9IS1XhkZhsNSwoD17pIWc1OpgawB6a4s6z1wQYQgo5Yj3pjTLwK5jwzVLcWq0HhRs"
+    });
+    
+    if (!fcmToken) {
+        console.error("3. Token is NULL. This usually means VAPID key mismatch or SSL issue.");
+    } else {
+        console.log("3. SUCCESS! FCM Token:", fcmToken);
+    }
+
 
       if (fcmToken) {
         const user = auth.currentUser; // Get current user
@@ -36,7 +40,7 @@ export default function useNotifications() {
           const actualIdToken = await user.getIdToken(true); // Add true to force refresh
           console.log('Sending FCM token with ID token:', actualIdToken); // <--- ADD THIS LINE
           await axios.post(
-            'https://shopease-ecommerce-app-jv4u.onrender.com/api/notifications/devices',
+            'http://localhost:3007/api/notifications/devices',
             { token: fcmToken },
             { headers: { Authorization: `Bearer ${actualIdToken}` } }
           );

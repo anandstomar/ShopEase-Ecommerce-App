@@ -1,10 +1,10 @@
 // src/firebase.js
 import { initializeApp } from 'firebase/app';
-import { 
+import {
   signInWithPopup,
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithRedirect, 
+  getAuth,
+  GoogleAuthProvider,
+  signInWithRedirect,
   getRedirectResult,
   setPersistence,
   browserSessionPersistence,
@@ -18,14 +18,21 @@ import { useNavigate } from 'react-router-dom';
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDUCRhKKIPyKS2Dek6uksjeNUGBQ2--IdM",
-  authDomain: "e-commerce-app-3bae3.firebaseapp.com",
-  databaseURL: "https://e-commerce-app-3bae3-default-rtdb.firebaseio.com",
-  projectId: "e-commerce-app-3bae3",
-  storageBucket: "e-commerce-app-3bae3.firebasestorage.app",
-  messagingSenderId: "11253895168",
-  appId: "1:11253895168:web:b80bb45a78b5fe070148e5",
-  measurementId: "G-KMLM1P6X35"
+  // apiKey: "AIzaSyDUCRhKKIPyKS2Dek6uksjeNUGBQ2--IdM",
+  // authDomain: "e-commerce-app-3bae3.firebaseapp.com",
+  // databaseURL: "https://e-commerce-app-3bae3-default-rtdb.firebaseio.com",
+  // projectId: "e-commerce-app-3bae3",
+  // storageBucket: "e-commerce-app-3bae3.firebasestorage.app",
+  // messagingSenderId: "11253895168",
+  // appId: "1:11253895168:web:b80bb45a78b5fe070148e5",
+  // measurementId: "G-KMLM1P6X35"
+  apiKey: "AIzaSyAR7IQQevKp-YKUgqfmOTLDYINMuQ1rkEo",
+  authDomain: "ecommerce-notification-2.firebaseapp.com",
+  projectId: "ecommerce-notification-2",
+  storageBucket: "ecommerce-notification-2.firebasestorage.app",
+  messagingSenderId: "860927112440",
+  appId: "1:860927112440:web:36bddce526597a4331b70d",
+  measurementId: "G-LQ3GJP2L9Y"
 };
 
 
@@ -59,13 +66,13 @@ const loginWithGoogle = async (navigate) => {
   try {
     const result = await signInWithPopup(auth, provider);
     console.log('Google login result:', result);
-    const { user } = result; 
+    const { user } = result;
     const idToken = await user.getIdToken();
-    const uid      = user.uid;
+    const uid = user.uid;
     const { data } = await api.post('/users/firebase', { idToken });
     localStorage.setItem('token', data.token);
     localStorage.setItem("userId", uid);
-    navigate('/dashboard');   
+    navigate('/dashboard');
   } catch (err) {
     console.error('Google login failed:', err);
     alert(err.response?.data?.error || err.message);
@@ -74,25 +81,34 @@ const loginWithGoogle = async (navigate) => {
 
 const retrieveFCMToken = async () => {
   try {
-    const currentToken = await getToken(messaging, { vapidKey: 'BITaTIemTqctnE7VGQ3Birc8z2gS7CCEAWvgY7XDMTsCFx-6kWP5hw6u3oxanZ9aj6wZDAt64goV0l6SrNkI7xM' });
-    if (currentToken) {
-      console.log('FCM Registration Token:', currentToken);
-      return currentToken;
-    } else {
-      console.log('No registration token available.');
-      return null;
+    console.log("1. Requesting permission...");
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      console.error("Permission denied");
+      return;
     }
+
+    console.log("2. Fetching FCM Token...");
+    const currentToken = await getToken(messaging, {
+      vapidKey: "BPdU9oYz7igbT8H8QvmZek9IS1XhkZhsNSwoD17pIWc1OpgawB6a4s6z1wQYQgo5Yj3pjTLwK5jwzVLcWq0HhRs"
+    });
+
+    if (!currentToken) {
+      console.error("3. Token is NULL. This usually means VAPID key mismatch or SSL issue.");
+    } else {
+      console.log("3. SUCCESS! FCM Token:", currentToken);
+    }
+    return currentToken;
   } catch (error) {
-    console.error('An error occurred while retrieving token:', error);
-    return null;
+    console.error("ERROR in getToken:", error);
   }
 };
 
-export { 
-  auth, 
-  provider,  
-  signInWithRedirect, 
-  signInWithGoogleRedirect, 
+export {
+  auth,
+  provider,
+  signInWithRedirect,
+  signInWithGoogleRedirect,
   getRedirectResult,
   GoogleAuthProvider,
   retrieveFCMToken,
