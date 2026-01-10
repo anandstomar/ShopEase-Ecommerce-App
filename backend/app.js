@@ -110,7 +110,7 @@ app.get('/auth/google/callback',
     console.log('Google ID:', googleId);
     console.log('JWT Token:', token);
     const redirectUrl =
-      `https://shop-ease-ecommerce-app.vercel.app/api/dashboard/products` +
+      `https://shop-ease-ecommerce-app.vercel.app/dashboard/products` +
       `?googleId=${encodeURIComponent(googleId)}`;  //&
     res.redirect(redirectUrl);
   }
