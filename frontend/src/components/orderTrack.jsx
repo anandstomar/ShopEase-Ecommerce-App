@@ -42,7 +42,7 @@ export default function OrderTracker({ driverId, customerLocation, initialDriver
     if (!driverId) return;
 
     // Connect to Socket
-    socketRef.current = io('http://localhost:3007'); // Update with your backend URL
+    socketRef.current = io('https://shopease-ecommerce-app-jv4u.onrender.com'); // Update with your backend URL
     socketRef.current.emit('joinDriverRoom', `driver_${driverId}`);
 
     // Listen for live updates
