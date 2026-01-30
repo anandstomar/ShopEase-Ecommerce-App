@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
-import OrderTracker from '../components/OrderTrack';
+import OrderTracker from '../components/orderTrack';
 
 export default function TrackOrderPage() {
   const { orderId } = useParams();

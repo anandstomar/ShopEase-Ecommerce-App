@@ -26,7 +26,7 @@ export default function ComplexDriverTracker() {
   const [position, setPosition] = useState({ lat: 22.6017, lng: 75.6834 });
   const [status, setStatus] = useState('offline');
   const [isManualMode, setIsManualMode] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // To show "Saving..." spinner
+  const [isSaving, setIsSaving] = useState(false); 
 
   // --- API LOGIC ---
   const saveToDb = async (lat, lng) => {
