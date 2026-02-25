@@ -22,6 +22,7 @@ import { auth } from './firebase'
 import DriverLogin from './pages/DriverLogin';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ProductReviewsPage from './pages/ProductReview';
 
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="profile" element={<UserProfile />} />
           <Route path="track/:orderId" element={<TrackOrderPage />} />
           <Route path="driver" element={<DriverTracker driverId={driverId} />} />
+          <Route path="product/:productId/reviews" element={<ProductReviewsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
