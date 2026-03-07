@@ -34,4 +34,20 @@ async function createProduct(req, res) {
   }
 }
 
-module.exports = { getProducts, createProduct };
+async function getProductById(req, res) {
+  try {
+    const { id } = req.params;
+    const product = await productService.getProductById(id);
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (err) {
+    console.error('Get Product By ID Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { getProducts, createProduct, getProductById };

@@ -1,7 +1,7 @@
-import React from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../cartmangement/cartSlice';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
 const loadRazorpay = () =>
@@ -13,114 +13,237 @@ const loadRazorpay = () =>
     document.body.appendChild(script);
   });
 
-export default function RazorpayCheckout({ amount: propAmount }) {
+export default function RazorpayCheckout() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const cartItems = useSelector(state => state.cart.items);
-  const calculatedAmount = cartItems.reduce(
-    (sum, { product, quantity }) => sum + product.price * quantity,
-    0
-  );
-  const amount = propAmount != null ? propAmount : calculatedAmount;
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePayment = async () => {
-    if (amount <= 0) {
+    if (cartItems.length === 0) {
       alert('Your cart is empty!');
       return;
     }
+
+    setIsProcessing(true);
     const sdkReady = await loadRazorpay();
     if (!sdkReady) {
       alert('Failed to load Razorpay SDK. Check your connection.');
+      setIsProcessing(false);
       return;
     }
+
+    const rawUserId = localStorage.getItem('userId');
+    if (!rawUserId) {
+      alert('User ID not found. Please log in again.');
+      setIsProcessing(false);
+      return;
+    }
+
+    // 2. Translate the string UID to your PostgreSQL Integer ID
+    let postgresUserId;
     try {
-      const { data: order } = await axios.post(
-        'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/make-payment',
-        { amount, currency: 'INR', receipt: `receipt_${Date.now()}` }
-      );
+      if (isNaN(rawUserId) || rawUserId.length > 10) {
+        const { data } = await api.get(`/users/identify/${encodeURIComponent(rawUserId)}`);
+        postgresUserId = data.id;
+      } else {
+        // Fallback if it's already an integer
+        const { data } = await api.get(`/users/profile/${rawUserId}`);
+        postgresUserId = data.id;
+      }
+    } catch (err) {
+      console.error('User identification failed:', err);
+      alert('Could not verify your user profile. Please try logging in again.');
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // 1. Tell the backend to create a PENDING order and get the Razorpay ID
+      // We send the items, NOT the calculated total amount. Backend calculates the total.
+      const { data: { razorpayOrderId, amount, currency, orderId } } = await api.post('/initiate', {
+        userId: postgresUserId,
+        items: cartItems.map(({ product, quantity }) => ({
+          product_id: product._id,
+          quantity
+        }))
+      });
+      console.log('Initiated Order ID from backend:', orderId);
+
       const options = {
-        key: "rzp_test_PBUluwX3e15zwd",
-        amount: order.amount,
-        currency: order.currency,
-        name: 'ShopEase',
+        key: "rzp_test_PBUluwX3e15zwd", 
+        amount: amount,
+        currency: currency,
+        name: 'ShopEase Ecommerce',
         description: 'Order Payment',
-        order_id: order.id,
+        order_id: razorpayOrderId,
         prefill: {
           name: localStorage.getItem('userName') || '',
           email: localStorage.getItem('userEmail') || '',
           contact: localStorage.getItem('userContact') || '',
         },
-        handler: async response => {
-          try {
-            console.log("payment respnse",response);
-            const verifyRes = await axios.post(
-              'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/verify-payment',
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }
-            );
-            // alert(verifyRes.data.message);
-            dispatch(clearCart());
-            const userId = localStorage.getItem('userId')
-            if (!userId) {
-              alert('User ID not found. Please log in again.');
-              console.error('User ID not found in localStorage');
-            } 
-            console.log('User ID:', userId);
-             let ord={};
-            if (isNaN(userId)) {
-             const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-             ord = data.id;
-            }
-            if((userId.length) > 10){
-              const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
-              ord = data.id;
-            }
-            else{
-              const res = await api.get(`/users/profile/${userId}`);
-              ord = res.data.id;
-            }
-            
-            await api.post('/orders/', {
-                    user_id: ord,
-                    items: cartItems.map(({ product, quantity }) => ({
-                      product_id: product._id,
-                      quantity
-                    })),
-                    total: amount,
-                    payment_id: response.razorpay_payment_id
-                  })
-                  // alert(
-                  //   'Payment successful! Your order is placed and a confirmation email is on its way.'
-                  // );
-                } catch (err) {
-                  console.error('Error in post-payment flow:', err)
-                  alert('Something went wrong while placing your order.')
-                }
-              },
-              modal: { ondismiss: () => console.log('Checkout closed') },
-              theme: { color: '#3399cc' }
-            }
+        handler: function (response) {
+          console.log('Razorpay Payment Success! Redirecting...');
+          dispatch(clearCart());
+          navigate(`/dashboard/order-confirmation/${orderId}`);
+        },
+        modal: { 
+          ondismiss: () => {
+            console.log('Checkout closed');
+            setIsProcessing(false);
+          } 
+        },
+        theme: { color: '#3399cc' }
+      };
+
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
       console.error('Order creation error:', err);
       alert('Could not initiate payment');
+      setIsProcessing(false);
     }
   };
 
   return (
     <button
       onClick={handlePayment}
-      className="
-        px-4 py-2 
-        bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 
-        text-white rounded-md 
-        transition-colors
-      "
+      disabled={isProcessing}
+      className={`px-4 py-2 text-white rounded-md transition-colors ${
+        isProcessing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+      }`}
     >
-      Pay ₹{amount.toFixed(2)}
+      {isProcessing ? 'Processing...' : 'Proceed to Pay'}
     </button>
   );
 }
+
+
+
+
+// import React from 'react';
+// import axios from 'axios';
+// import { useSelector, useDispatch } from 'react-redux';
+// import { clearCart } from '../cartmangement/cartSlice';
+// import api from '../api';
+
+// const loadRazorpay = () =>
+//   new Promise(resolve => {
+//     const script = document.createElement('script');
+//     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+//     script.onload = () => resolve(true);
+//     script.onerror = () => resolve(false);
+//     document.body.appendChild(script);
+//   });
+
+// export default function RazorpayCheckout({ amount: propAmount }) {
+//   const dispatch = useDispatch();
+//   const cartItems = useSelector(state => state.cart.items);
+//   const calculatedAmount = cartItems.reduce(
+//     (sum, { product, quantity }) => sum + product.price * quantity,
+//     0
+//   );
+//   const amount = propAmount != null ? propAmount : calculatedAmount;
+
+//   const handlePayment = async () => {
+//     if (amount <= 0) {
+//       alert('Your cart is empty!');
+//       return;
+//     }
+//     const sdkReady = await loadRazorpay();
+//     if (!sdkReady) {
+//       alert('Failed to load Razorpay SDK. Check your connection.');
+//       return;
+//     }
+//     try {
+//       const { data: order } = await axios.post(
+//         'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/make-payment',
+//         { amount, currency: 'INR', receipt: `receipt_${Date.now()}` }
+//       );
+//       const options = {
+//         key: "rzp_test_PBUluwX3e15zwd",
+//         amount: order.amount,
+//         currency: order.currency,
+//         name: 'ShopEase',
+//         description: 'Order Payment',
+//         order_id: order.id,
+//         prefill: {
+//           name: localStorage.getItem('userName') || '',
+//           email: localStorage.getItem('userEmail') || '',
+//           contact: localStorage.getItem('userContact') || '',
+//         },
+//         handler: async response => {
+//           try {
+//             console.log("payment respnse",response);
+//             const verifyRes = await axios.post(
+//               'https://shopease-ecommerce-app-jv4u.onrender.com/api/payments/verify-payment',
+//               {
+//                 razorpay_order_id: response.razorpay_order_id,
+//                 razorpay_payment_id: response.razorpay_payment_id,
+//                 razorpay_signature: response.razorpay_signature,
+//               }
+//             );
+//             // alert(verifyRes.data.message);
+//             dispatch(clearCart());
+//             const userId = localStorage.getItem('userId')
+//             if (!userId) {
+//               alert('User ID not found. Please log in again.');
+//               console.error('User ID not found in localStorage');
+//             } 
+//             console.log('User ID:', userId);
+//              let ord={};
+//             if (isNaN(userId)) {
+//              const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+//              ord = data.id;
+//             }
+//             if((userId.length) > 10){
+//               const {data} = await api.get(`/users/identify/${encodeURIComponent(userId)}`);
+//               ord = data.id;
+//             }
+//             else{
+//               const res = await api.get(`/users/profile/${userId}`);
+//               ord = res.data.id;
+//             }
+            
+//             await api.post('/orders/', {
+//                     user_id: ord,
+//                     items: cartItems.map(({ product, quantity }) => ({
+//                       product_id: product._id,
+//                       quantity
+//                     })),
+//                     total: amount,
+//                     payment_id: response.razorpay_payment_id
+//                   })
+//                   // alert(
+//                   //   'Payment successful! Your order is placed and a confirmation email is on its way.'
+//                   // );
+//                 } catch (err) {
+//                   console.error('Error in post-payment flow:', err)
+//                   alert('Something went wrong while placing your order.')
+//                 }
+//               },
+//               modal: { ondismiss: () => console.log('Checkout closed') },
+//               theme: { color: '#3399cc' }
+//             }
+//       const rzp = new window.Razorpay(options);
+//       rzp.open();
+//     } catch (err) {
+//       console.error('Order creation error:', err);
+//       alert('Could not initiate payment');
+//     }
+//   };
+
+//   return (
+//     <button
+//       onClick={handlePayment}
+//       className="
+//         px-4 py-2 
+//         bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 
+//         text-white rounded-md 
+//         transition-colors
+//       "
+//     >
+//       Pay ₹{amount.toFixed(2)}
+//     </button>
+//   );
+// }

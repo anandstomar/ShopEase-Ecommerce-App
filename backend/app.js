@@ -5,6 +5,7 @@ const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { runNotificationConsumer } = require('./services/notificationService');
 const { connectProducers, runConsumer } = require('./config/kafka');
@@ -21,12 +22,20 @@ const { initSocket } = require('./config/socketio');
 const http = require('http');
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET } = process.env;
 const pool = require('./config/postgresql');
+const Webhook = require("./routes/webhook")
 
 const app = express();
-app.use(express.json());
-app.use(bodyParser.json());
 app.use(cors());
-
+// app.use(bodyParser.json());
+app.use((req, res, next) => {
+ if (req.originalUrl === '/api/webhooks/razorpay') {
+    next(); 
+  } else {
+    express.json()(req, res, next);
+  }
+});
+app.use(express.urlencoded({ extended: true }));
+app.use('/api', Webhook);
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
@@ -34,6 +43,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/drivers', driverRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,

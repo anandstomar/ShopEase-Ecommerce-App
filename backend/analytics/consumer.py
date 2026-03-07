@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import json
 import signal
 import sys
-const MONGODB_URL = process.env.MONGODB_URL;
+
 
 # MongoDB setup
 mongo_client = MongoClient(MONGODB_URL)

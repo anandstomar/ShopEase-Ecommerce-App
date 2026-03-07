@@ -16,6 +16,7 @@ import useNotifications from './hooks/userNotification'
 import ForgotPassword from './pages/forgetPassword';
 import ResetPassword from './pages/resetPassword';
 import CartWithCheckout from './components/checkout'
+import OrderConfirmation from './components/OrderConfirmation'
 import './App.css'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="profile" element={<UserProfile />} />
           <Route path="track/:orderId" element={<TrackOrderPage />} />
           <Route path="driver" element={<DriverTracker driverId={driverId} />} />
+          <Route path="order-confirmation/:orderId" element={<OrderConfirmation />} />
           {/* <Route path="product/:productId/reviews" element={<ProductReviewsPage />} /> */}
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

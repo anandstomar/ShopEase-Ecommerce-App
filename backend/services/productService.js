@@ -32,4 +32,26 @@ async function createProduct(data) {
   return p;
 }
 
-module.exports = { getAllProducts, createProduct };
+async function getProductById(id) {
+  const cacheKey = `product:${id}`; // Unique key for this specific ID
+  
+  // 1. Try Cache
+  const cached = await redisClient.get(cacheKey);
+  if (cached) {
+    console.log(`🌳 product ${id} from cache`);
+    return JSON.parse(cached);
+  }
+
+  // 2. Try MongoDB
+  const product = await Product.findById(id).lean();
+  
+  if (!product) return null; // Handle not found in controller
+
+  // 3. Save to Cache (Expires in 60s)
+  await redisClient.setEx(cacheKey, 60, JSON.stringify(product));
+  console.log(`🌱 product ${id} from MongoDB & cached`);
+  
+  return product;
+}
+
+module.exports = { getAllProducts, createProduct, getProductById };

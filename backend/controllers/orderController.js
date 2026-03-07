@@ -1,4 +1,5 @@
-const { placeOrder, getOrdersForUser, fetchOrderStatus } = require('../services/orderService');
+const { placeOrder, getOrdersForUser, fetchOrderStatus} = require('../services/orderService');
+const { getOrderById } = require("../models/orderModel")
 
 async function placeOrderController(req, res) {
   try {
@@ -28,6 +29,23 @@ async function getMyOrdersController(req, res) {
   }
 }
 
+async function getOrderByIds(req, res)  {
+  try {
+    const { orderId } = req.params;
+    const order = await getOrderById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Send back a single 'order' object
+    res.status(200).json({ success: true, order: order });
+  } catch (error) {
+    console.error('Error fetching order by ID:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 async function getOrderStatusController(req, res) {
   try {
     const orderId = parseInt(req.params.orderId, 10);
@@ -53,59 +71,11 @@ async function getOrderStatusController(req, res) {
 module.exports = {
   placeOrderController,
   getMyOrdersController,
-  getOrderStatusController
+  getOrderStatusController,
+  getOrderByIds
 };
 
 
 
-
-
-// const { getOrdersForUser } = require('../services/orderService');
-// const { createFullOrder } = require('../models/orderModel');
-// const {ecommerceProducer} = require('../config/kafka');
-
-// async function placeOrder(req, res) {
-//   try {
-//     const { user_id, items, total, payment_id } = req.body;
-//     console.log('Incoming order payload:', req.body)
-
-//     const order = await createFullOrder({
-//       user_id,
-//       total,
-//       payment_id,
-//       items
-//     });
-
-
-//     // publish Kafka event
-//     // const event = { orderId: order.id, user_id, items, total };
-//     // await ecommerceProducer.send({
-//     //   topic: 'order.created',
-//     //   messages: [{ value: JSON.stringify(event) }]
-//     // });
-
-//     res.status(201).json({ success: true, orderId: order.id });
-//   } catch (err) {
-//     console.error('Order placement error:', err);
-//     res.status(500).json({ error: 'Could not place order' });
-//   }
-// }
-
-
-// async function getMyOrders(req, res) {
-//   try {
-//     const userId = parseInt(req.params.userId, 10);
-//     const orders = await getOrdersForUser(userId);
-//     res.json(orders);
-//   } catch (err) {
-//     console.error('Get my orders error:', err);
-//     res.status(500).json({ error: 'Could not fetch orders' });
-//   }
-// }
-
-
-
-
-// module.exports = { placeOrder,getMyOrders };
 
 
