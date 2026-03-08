@@ -25,4 +25,8 @@ async function getAllDeviceTokens() {
   return rows.map(r => r.device_token);
 }
 
-module.exports = { saveDeviceToken, getDeviceTokensByUserId, getAllDeviceTokens };
+async function deleteDeviceToken(token) {
+  await pool.query('DELETE FROM user_devices WHERE device_token = $1', [token]);
+}
+
+module.exports = { saveDeviceToken, getDeviceTokensByUserId, getAllDeviceTokens, deleteDeviceToken };
