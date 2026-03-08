@@ -3,7 +3,7 @@ console.log(Kafka.features);
 const path = require("path");
 require("dotenv").config();
 
-const SSL_CA_LOCATION = path.join(__dirname, "ca.pem"); 
+//const SSL_CA_LOCATION = path.join(__dirname, "ca.pem"); 
 const TOPIC_NAME = "order.created";
 const SASL_MECHANISM = "SCRAM-SHA-256";
 
@@ -14,7 +14,7 @@ const connectionConfig = {
   "sasl.mechanism": "SCRAM-SHA-256",
   "sasl.username": process.env.KAFKA_USERNAME,
   "sasl.password": process.env.KAFKA_PASSWORD2, // Using PASSWORD2 as per your snippet
-  "ssl.ca.location": SSL_CA_LOCATION,
+  "ssl.ca.location": SSL_CA_LOCATION || 'ca.pem',  
 };
 
 // 2. Producer gets connection + delivery reports + debug
