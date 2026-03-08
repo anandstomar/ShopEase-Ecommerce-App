@@ -57,7 +57,8 @@ async function deleteDeviceToken(token) {
 
 // --- FCM Logic (Stays mostly the same) ---
 async function notifyOrderCreated(event) {
-  const userId =  await getUserByFirebaseUid(event.firebaseUid);
+  const userId =  await getUserByFirebaseUid(event.userId);
+  console.log(`Looking up user for Firebase UID ${event.userId}: Found User ID ${userId?.id}`); 
   if (!userId) {
     console.log(`[FCM] No user found for Firebase UID ${event.firebaseUid}`);
     return;
