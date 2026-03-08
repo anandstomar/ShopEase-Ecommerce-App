@@ -3,7 +3,15 @@ console.log(Kafka.features);
 const path = require("path");
 require("dotenv").config();
 
-//const SSL_CA_LOCATION = path.join(__dirname, "ca.pem"); 
+
+try {
+     const SSL_CA_LOCATION = path.join(__dirname, "/etc/secrets/ca.pem");  
+      console.log('✅ Loaded Firebase credentials from /etc/secrets/');
+    } catch (e) {
+      const SSL_CA_LOCATION = path.join(__dirname, "ca.pem");
+      console.log('✅ Loaded Firebase credentials from local file');
+    }
+
 const TOPIC_NAME = "order.created";
 const SASL_MECHANISM = "SCRAM-SHA-256";
 
