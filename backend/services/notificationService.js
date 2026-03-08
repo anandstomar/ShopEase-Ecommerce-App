@@ -1,5 +1,6 @@
 const admin = require('../config/firebase');
 const { getDeviceTokensByUserId } = require('../models/NotificationModel');
+const { getUserByFirebaseUid } = require('../models/userModel');
 const { notificationConsumer } = require('../config/kafka'); 
 const { pool: db } = require('../config/postgresql');
 
@@ -56,9 +57,14 @@ async function deleteDeviceToken(token) {
 
 // --- FCM Logic (Stays mostly the same) ---
 async function notifyOrderCreated(event) {
-  const tokens = await getDeviceTokensByUserId(event.userId);
+  const userId =  await getUserByFirebaseUid(event.firebaseUid);
+  if (!userId) {
+    console.log(`[FCM] No user found for Firebase UID ${event.firebaseUid}`);
+    return;
+  }
+  const tokens = await getDeviceTokensByUserId(userId.id);
   if (!tokens.length) {
-    console.log(`[FCM] No devices found for User ${event.userId}`);
+    console.log(`[FCM] No devices found for User ${userId.id}`);
     return;
   }
 
