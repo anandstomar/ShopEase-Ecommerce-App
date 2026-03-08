@@ -1,35 +1,60 @@
 const admin = require('../config/firebase');
 const { getDeviceTokensByUserId } = require('../models/NotificationModel');
-const { notificationConsumer } = require('../config/kafka'); // Import Consumer
+const { notificationConsumer } = require('../config/kafka'); 
 const { pool: db } = require('../config/postgresql');
 
 // --- Kafka Consumer Logic ---
 async function runNotificationConsumer() {
-  try {
-    await notificationConsumer.connect();
-    await notificationConsumer.subscribe({ topic: 'order.created', fromBeginning: false });
-    console.log('👂 Notification Service listening on "order.created"');
+  return new Promise((resolve, reject) => {
+    
+    // 1. Handle the 'ready' event
+    notificationConsumer.on("ready", () => {
+      console.log('✅ Kafka Consumer ready');
+      
+      try {
+        // FIX: Must be an array of strings
+        notificationConsumer.subscribe(['order.created']);
+        
+        // Start consuming messages
+        notificationConsumer.consume();
+        console.log('👂 Notification Service listening on "order.created"');
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
 
-    await notificationConsumer.run({
-      eachMessage: async ({ topic, message }) => {
-        const event = JSON.parse(message.value.toString());
-        console.log(`[Kafka] Received event for Order ${event.orderId}`);
+    // 2. Handle incoming messages (Equivalent to eachMessage)
+    notificationConsumer.on("data", async (data) => {
+      try {
+        const event = JSON.parse(data.value.toString());
+        const topic = data.topic;
+        
+        console.log(`[Kafka] Received event from topic: ${topic} for Order ${event.orderId}`);
 
         if (topic === 'order.created') {
           await notifyOrderCreated(event);
         }
-      },
+      } catch (parseErr) {
+        console.error('❌ Error parsing Kafka message:', parseErr);
+      }
     });
-  } catch (err) {
-    console.error('[Kafka] Consumer error:', err);
-  }
+
+    // 3. Handle errors
+    notificationConsumer.on("event.error", (err) => {
+      console.error('[Kafka] Consumer event error:', err);
+    });
+
+    // 4. Connect the consumer
+    notificationConsumer.connect();
+  });
 }
 
 async function deleteDeviceToken(token) {
   await db.query('DELETE FROM user_devices WHERE device_token = $1', [token]);
 }
 
-// --- FCM Logic ---
+// --- FCM Logic (Stays mostly the same) ---
 async function notifyOrderCreated(event) {
   const tokens = await getDeviceTokensByUserId(event.userId);
   if (!tokens.length) {
@@ -49,17 +74,12 @@ async function notifyOrderCreated(event) {
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
     console.log(`[FCM] Sent: ${response.successCount} success, ${response.failureCount} failed.`);
+    
     if (response.failureCount > 0) {
-      const failedTokens = [];
       for (let idx = 0; idx < response.responses.length; idx++) {
         const resp = response.responses[idx];
-        if (!resp.success) {
-          failedTokens.push(tokens[idx]);
-          console.error(`❌ FCM Failure Reason:`, resp.error);
-        }
-        if (resp.error && resp.error.code === 'messaging/registration-token-not-registered') {
+        if (!resp.success && resp.error?.code === 'messaging/registration-token-not-registered') {
           console.log(`🗑️ Removing stale token: ${tokens[idx]}`);
-          // Add a function to delete this specific token from your DB
           await deleteDeviceToken(tokens[idx]);
         }
       }
@@ -70,6 +90,86 @@ async function notifyOrderCreated(event) {
 }
 
 module.exports = { runNotificationConsumer, notifyOrderCreated };
+
+
+
+
+
+
+
+
+// const admin = require('../config/firebase');
+// const { getDeviceTokensByUserId } = require('../models/NotificationModel');
+// const { notificationConsumer } = require('../config/kafka'); // Import Consumer
+// const { pool: db } = require('../config/postgresql');
+
+// // --- Kafka Consumer Logic ---
+// async function runNotificationConsumer() {
+//   try {
+//     await notificationConsumer.connect();
+//     await notificationConsumer.subscribe({ topic: 'order.created', fromBeginning: false });
+//     console.log('👂 Notification Service listening on "order.created"');
+
+//     await notificationConsumer.run({
+//       eachMessage: async ({ topic, message }) => {
+//         const event = JSON.parse(message.value.toString());
+//         console.log(`[Kafka] Received event for Order ${event.orderId}`);
+
+//         if (topic === 'order.created') {
+//           await notifyOrderCreated(event);
+//         }
+//       },
+//     });
+//   } catch (err) {
+//     console.error('[Kafka] Consumer error:', err);
+//   }
+// }
+
+// async function deleteDeviceToken(token) {
+//   await db.query('DELETE FROM user_devices WHERE device_token = $1', [token]);
+// }
+
+// // --- FCM Logic ---
+// async function notifyOrderCreated(event) {
+//   const tokens = await getDeviceTokensByUserId(event.userId);
+//   if (!tokens.length) {
+//     console.log(`[FCM] No devices found for User ${event.userId}`);
+//     return;
+//   }
+
+//   const message = {
+//     notification: {
+//       title: 'Order Placed!',
+//       body: `Your order #${event.orderId} of ₹${event.total} is confirmed.`
+//     },
+//     data: { orderId: String(event.orderId) },
+//     tokens: tokens
+//   };
+
+//   try {
+//     const response = await admin.messaging().sendEachForMulticast(message);
+//     console.log(`[FCM] Sent: ${response.successCount} success, ${response.failureCount} failed.`);
+//     if (response.failureCount > 0) {
+//       const failedTokens = [];
+//       for (let idx = 0; idx < response.responses.length; idx++) {
+//         const resp = response.responses[idx];
+//         if (!resp.success) {
+//           failedTokens.push(tokens[idx]);
+//           console.error(`❌ FCM Failure Reason:`, resp.error);
+//         }
+//         if (resp.error && resp.error.code === 'messaging/registration-token-not-registered') {
+//           console.log(`🗑️ Removing stale token: ${tokens[idx]}`);
+//           // Add a function to delete this specific token from your DB
+//           await deleteDeviceToken(tokens[idx]);
+//         }
+//       }
+//     }
+//   } catch (err) {
+//     console.error('[FCM] Send error:', err);
+//   }
+// }
+
+// module.exports = { runNotificationConsumer, notifyOrderCreated };
 
 
 
