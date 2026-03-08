@@ -1,16 +1,23 @@
 const Kafka = require("node-rdkafka");
 console.log(Kafka.features); 
 const path = require("path");
+const fs = require("fs"); // Make sure to import fs!
 require("dotenv").config();
 
+let SSL_CA_LOCATION;
 
-try {
-     const SSL_CA_LOCATION = path.join(__dirname, "/etc/secrets/ca.pem");  
-      console.log('✅ Loaded Firebase credentials from /etc/secrets/');
-    } catch (e) {
-      const SSL_CA_LOCATION = path.join(__dirname, "ca.pem");
-      console.log('✅ Loaded Firebase credentials from local file');
-    }
+const renderPath = "/etc/secrets/ca.pem"; 
+const localPath = path.join(__dirname, "ca.pem"); 
+
+if (fs.existsSync(renderPath)) {
+  SSL_CA_LOCATION = renderPath;
+  console.log('✅ Loaded Kafka CA cert from Render Secrets (/etc/secrets/ca.pem)');
+} else if (fs.existsSync(localPath)) {
+  SSL_CA_LOCATION = localPath;
+  console.log('✅ Loaded Kafka CA cert from local file system');
+} else {
+  console.error('❌ CRITICAL: Could not find ca.pem in Render or Local path!');
+}
 
 const TOPIC_NAME = "order.created";
 const SASL_MECHANISM = "SCRAM-SHA-256";
@@ -22,7 +29,7 @@ const connectionConfig = {
   "sasl.mechanism": "SCRAM-SHA-256",
   "sasl.username": process.env.KAFKA_USERNAME,
   "sasl.password": process.env.KAFKA_PASSWORD2, // Using PASSWORD2 as per your snippet
-  "ssl.ca.location": SSL_CA_LOCATION || 'ca.pem',  
+  "ssl.ca.location": SSL_CA_LOCATION ,  
 };
 
 // 2. Producer gets connection + delivery reports + debug
