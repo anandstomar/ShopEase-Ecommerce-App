@@ -15,26 +15,6 @@ async function placeOrder(orderData) {
   // 1) Create DB transaction
   const order = await createFullOrder({ user_id, items, total, payment_id });
 
-  // // 2) Publish Kafka event
-  // try {
-  //   await ecommerceProducer.send({
-  //     topic: 'orders',
-  //     messages: [{
-  //       key: String(order.id),
-  //       value: JSON.stringify({
-  //         orderId: order.id,
-  //         user_id,
-  //         items,
-  //         total,
-  //         created_at: order.created_at,
-  //       })
-  //     }]
-  //   });
-  //   console.log(`Order event published for order id ${order.id}`);
-  // } catch (err) {
-  //   console.error('Kafka publish error:', err);
-  // }
-
   try {
     const payload = JSON.stringify({
       orderId: order.id,
@@ -47,7 +27,7 @@ async function placeOrder(orderData) {
       topic: 'order.created',
       messages: [{ key: String(order.id), value: payload }]
     });
-    console.log(`[Kafka] Event sent to 'order.created' for Order ID: ${order.id}`);
+    console.log(`[Kafka] Event sent to 'order.created' for Order ID: ${order.id} and userID ${user_id}`);
   } catch (err) {
     console.error('[Kafka] Failed to send event:', err);
   }
