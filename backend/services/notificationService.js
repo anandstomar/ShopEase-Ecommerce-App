@@ -53,16 +53,17 @@ async function runNotificationConsumer() {
 
 async function notifyOrderCreated(event) {
   console.log(`[NotificationService] Processing order.created for Order ID ${event.orderId} and Firebase UID ${event.userId}`);
+  let tokens;
   if (isNaN(event.userId))  {
    const userId =  await getUserByFirebaseUid(event.userId); 
    if (!userId) {
     console.log(`[FCM] No user found for Firebase UID ${event.firebaseUid}`);
     return;
    }
-   const tokens = await getDeviceTokensByUserId(userId.id);
+   tokens = await getDeviceTokensByUserId(userId.id);
    console.log(`Sending order created notification to ${tokens} device(s) for user ${userId.id}`);
   } else {  
-   const tokens = await getDeviceTokensByUserId(event.userId);
+   tokens = await getDeviceTokensByUserId(event.userId);
    console.log(`Sending order created notification to ${tokens} device(s) for user ${userId.id}`);
   }
 
