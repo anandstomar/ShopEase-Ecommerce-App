@@ -40,7 +40,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/events', eventRoutes);
+// app.use('/api/events', eventRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/reviews', reviewRoutes);
