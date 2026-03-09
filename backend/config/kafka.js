@@ -41,8 +41,8 @@ const ecommerceProducer = new Kafka.Producer({
 // 3. Consumer gets ONLY connection + group.id (NO dr_cb)
 const notificationConsumer = new Kafka.KafkaConsumer({
   ...connectionConfig,
-  "group.id": "notification-group",
-  "auto.offset.reset": "earliest"
+  "group.id": `notification-group-${Date.now()}`, 
+  "auto.offset.reset": "latest"
 }, {});
 
 const connectProducers = () => new Promise((resolve, reject) => {
@@ -68,8 +68,17 @@ const connectProducers = () => new Promise((resolve, reject) => {
     reject(err);
   });
 
+   ecommerceProducer.on('delivery-report', (err, report) => {
+  if (err) {
+    console.error('❌ Message delivery failed:', err);
+  } else {
+    console.log(`🚚 SUCCESS: Message delivered to partition ${report.partition} at offset ${report.offset}`);
+  }
+});
+
   ecommerceProducer.connect();
   ecommerceProducer.setPollInterval(100);
+
 });
 
 

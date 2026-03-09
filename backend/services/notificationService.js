@@ -1,7 +1,38 @@
 const admin = require('../config/firebase');
 const { getDeviceTokensByUserId, deleteDeviceToken } = require('../models/NotificationModel');
 const { getUserByFirebaseUid } = require('../models/userModel');
-const { notificationConsumer } = require('../config/kafka'); 
+const { notificationConsumer, ecommerceProducer } = require('../config/kafka'); 
+
+
+function publishOrderCreated(orderId, userId, totalAmount) {
+  try {
+    const payload = {
+      orderId: orderId,
+      userId: userId,
+      total: totalAmount
+    };
+    console.log(payload)
+
+    // node-rdkafka uses .produce(topic, partition, messageBuffer, key, timestamp)
+    ecommerceProducer.produce(
+      'order.created',
+      null, 
+      Buffer.from(JSON.stringify(payload)), 
+      String(orderId), 
+      Date.now()
+    );
+
+    ecommerceProducer.flush(2000, (err) => {
+      if (err) {
+        console.error('⚠️ Failed to flush message to Kafka:', err);
+      }
+    });
+    
+    console.log(`[Kafka Producer] Event sent to 'order.created' for Order ID: ${orderId} and userID ${userId}`);
+  } catch (err) {
+    console.error(`[Kafka Producer] Failed to send event for Order ${orderId}:`, err);
+  }
+}
 
 // --- Kafka Consumer Logic ---
 async function runNotificationConsumer() {
@@ -30,7 +61,7 @@ async function runNotificationConsumer() {
         const event = JSON.parse(data.value.toString());
         const topic = data.topic;
         
-        console.log(`[Kafka] Received event from topic: ${topic} for Order ${event.orderId}`);
+        console.log(`[runNotificationConsumer] Received event from topic: ${topic} for Order ${event.orderId}`);
 
         if (topic === 'order.created') {
           await notifyOrderCreated(event);
@@ -52,24 +83,35 @@ async function runNotificationConsumer() {
 
 
 async function notifyOrderCreated(event) {
-  console.log(`[NotificationService] Processing order.created for Order ID ${event.orderId} and Firebase UID ${event.userId}`);
-  let tokens;
-  if (isNaN(event.userId))  {
-   const userId =  await getUserByFirebaseUid(event.userId); 
-   if (!userId) {
-    console.log(`[FCM] No user found for Firebase UID ${event.firebaseUid}`);
-    return;
-   }
-   tokens = await getDeviceTokensByUserId(userId.id);
-   console.log(`Sending order created notification to ${tokens} device(s) for user ${userId.id}`);
+ 
+let tokens;
+let targetUserId; // Declare this outside the if/else so everyone can see it!
+
+  // 1. Resolve the actual Database User ID
+  if (isNaN(event.userId)) {
+    console.log(`[notifyOrderCreated] Processing order.created for Order ID ${event.orderId} and Firebase UID ${event.userId}`);
+    const userRecord = await getUserByFirebaseUid(event.userId); 
+    
+    if (!userRecord) { // FIXED: Added the '!' so it aborts only if NOT found
+      console.log(`[FCM] No user found for Firebase UID ${event.userId}`);
+      return;
+    }
+    targetUserId = userRecord.id;
   } else {  
-   tokens = await getDeviceTokensByUserId(event.userId);
-   console.log(`Sending order created notification to ${tokens} device(s) for user ${userId.id}`);
+    console.log(`[notifyOrderCreated] Processing order.created for Order ID ${event.orderId} and userID ${event.userId}`);
+    // If it's already a number, just use it directly!
+    targetUserId = event.userId;
   }
 
+  // 2. Fetch the tokens using the resolved ID
+  tokens = await getDeviceTokensByUserId(targetUserId);
   
-  if (!tokens.length) {
-    console.log(`[FCM] No devices found for User ${userId.id}`);
+  // FIXED: Changed ${tokens} to ${tokens.length} so it doesn't print "[object Object]"
+  console.log(`Sending order created notification to ${tokens.length} device(s) for user ${targetUserId}`);
+  
+  // 3. Check if they actually have devices registered
+  if (!tokens || !tokens.length) {
+    console.log(`[FCM] No devices found for User ${targetUserId}`);
     return;
   }
 
@@ -81,6 +123,7 @@ async function notifyOrderCreated(event) {
     data: { orderId: String(event.orderId) },
     tokens: tokens
   };
+  console.log("message", message);
 
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
@@ -100,7 +143,7 @@ async function notifyOrderCreated(event) {
   }
 }
 
-module.exports = { runNotificationConsumer, notifyOrderCreated };
+module.exports = { runNotificationConsumer, notifyOrderCreated, publishOrderCreated };
 
 
 

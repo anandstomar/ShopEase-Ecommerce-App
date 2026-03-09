@@ -6,6 +6,7 @@ const productService = require("../services/productService")
 const router = express.Router();
 const { sendConfirmationEmail } = require('../utils/emailService');
 const {createPendingOrder, markOrderAsPaid} = require("../models/orderModel")
+const { publishOrderCreated } = require('../services/notificationService');
 require('dotenv').config();
 
 // Notice `express.raw` - this is required to preserve the exact payload for signature verification
@@ -28,25 +29,27 @@ router.post('/webhooks/razorpay',express.raw({ type: 'application/json' }), asyn
     // Now it's safe to parse the JSON
    const event = JSON.parse(req.body.toString());
 
-    // 2. Handle the specific event
     if (event.event === 'order.paid' || event.event === 'payment.captured') {
       const paymentData = event.payload.payment.entity;
       const razorpayOrderId = paymentData.order_id;
       const paymentId = paymentData.id;
-
-      // 3. The "Bank Transfer" Logic (Idempotency & ACID Transaction)
-      // Ideally, wrap this in a database transaction block
       
+      // Calculate the amount directly from Razorpay's payload (convert paise to INR)
+      const totalAmount = paymentData.amount / 100; 
+
+      // 3. The "Bank Transfer" Logic
       const updatedOrder = await markOrderAsPaid(razorpayOrderId, paymentId);
+      console.log("updatedOrder", updatedOrder);
 
-      console.log("updatedOrder",updatedOrder)
-
-     if (!updatedOrder) {
+      if (!updatedOrder) {
          console.log('Webhook ignored: Order not found or already paid.');
          return res.status(200).send('OK'); 
       }
 
-      sendConfirmationEmail(updatedOrder.user_id, updatedOrder.id);
+      // Pass the order ID, user ID, and the newly calculated totalAmount
+     await publishOrderCreated(updatedOrder.id, updatedOrder.user_id, totalAmount);
+
+     await  sendConfirmationEmail(updatedOrder.user_id, updatedOrder.id);
       
       console.log(`✅ Order ${updatedOrder.id} successfully marked as PAID`);
     }
